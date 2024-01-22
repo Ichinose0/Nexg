@@ -1,4 +1,4 @@
-use crate::Instance;
+use crate::{Instance, Queue};
 
 pub struct Device {
     device: ash::Device,
@@ -9,6 +9,10 @@ impl Device {
         Self {
             device,
         }
+    }
+
+    pub fn get_queue(&self,queue_family_index: usize) -> Queue {
+        Queue(unsafe { self.device.get_device_queue(queue_family_index as u32, 0)})
     }
 }
 

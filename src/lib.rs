@@ -1,15 +1,38 @@
 use std::{borrow::Cow, ffi::CStr};
 
-use ash::vk::{self, DeviceCreateInfo};
+use ash::vk::{self, DeviceCreateInfo, QueueFlags};
 
 mod device;
 mod instance;
+mod queue;
 
 pub use device::*;
 pub use instance::*;
+pub use queue::*;
 
 pub struct QueueFamilyProperties {
-    
+    graphic_support: bool,
+    compute_support: bool,
+    transfer_support: bool,
+    queue_count: u32,
+}
+
+impl QueueFamilyProperties {
+    pub fn count(&self) -> u32 {
+        self.queue_count
+    }
+
+    pub fn is_graphic_support(&self) -> bool {
+        self.graphic_support
+    }
+
+    pub fn is_compute_support(&self) -> bool {
+        self.compute_support
+    }
+
+    pub fn is_transfer_support(&self) -> bool {
+        self.transfer_support
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -29,9 +52,14 @@ impl<'a> DeviceConnecter<'a> {
 
 impl From<ash::vk::QueueFamilyProperties> for QueueFamilyProperties {
     fn from(value: ash::vk::QueueFamilyProperties) -> Self {
-        value.
+        let graphic_support = value.queue_flags.contains(QueueFlags::GRAPHICS);
+        let compute_support = value.queue_flags.contains(QueueFlags::COMPUTE);
+        let transfer_support =  value.queue_flags.contains(QueueFlags::TRANSFER);
         QueueFamilyProperties {
-
+            graphic_support,
+            compute_support,
+            transfer_support,
+            queue_count: value.queue_count
         }
     }
 }
