@@ -1,13 +1,40 @@
 use std::{borrow::Cow, ffi::CStr};
 
-use ash::vk;
+use ash::vk::{self, DeviceCreateInfo};
 
+mod device;
 mod instance;
 
+pub use device::*;
 pub use instance::*;
 
-#[derive(Clone, Copy, Debug)]
-pub struct DeviceConnecter(pub(crate) ash::vk::PhysicalDevice);
+pub struct QueueFamilyProperties {
+    
+}
+
+#[derive(Clone, Copy)]
+pub struct DeviceConnecter<'a>(pub(crate) ash::vk::PhysicalDevice,&'a Instance);
+
+impl<'a> DeviceConnecter<'a> {
+    pub fn create_device(&self) -> Device {
+        let create_info = DeviceCreateInfo::builder().build();
+        let device = self.1.create_device(self.0, &create_info);
+        device
+    }
+
+    pub fn get_queue_family_properties(&self) -> Vec<QueueFamilyProperties> {
+        self.1.get_queue_family_properties(self.0)
+    }
+}
+
+impl From<ash::vk::QueueFamilyProperties> for QueueFamilyProperties {
+    fn from(value: ash::vk::QueueFamilyProperties) -> Self {
+        value.
+        QueueFamilyProperties {
+
+        }
+    }
+}
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

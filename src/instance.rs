@@ -1,8 +1,8 @@
 use ash::extensions::ext::DebugUtils;
-use ash::vk::{self, DebugUtilsMessengerEXT};
+use ash::vk::{self, DebugUtilsMessengerEXT, DeviceCreateInfo, PhysicalDevice};
 use ash::{vk::InstanceCreateInfo, Entry};
 
-use crate::{vulkan_debug_callback, DeviceConnecter};
+use crate::{vulkan_debug_callback, Device, DeviceConnecter};
 
 pub struct InstanceFeature {
     extensions: Vec<*const i8>
@@ -76,7 +76,7 @@ impl Instance {
     pub fn enumerate_connecters(&self) -> Vec<DeviceConnecter> {
         let devices = unsafe { self.instance.enumerate_physical_devices() }.unwrap();
         let devices = devices.iter().map(|x| {
-            DeviceConnecter(*x)
+            DeviceConnecter(*x,&self)
         }).collect::<Vec<DeviceConnecter>>();
         devices
     }
@@ -100,6 +100,26 @@ impl Instance {
                 }
             },
             Err(_) => return None
+        }
+    }
+
+    pub(crate) fn create_device(&self,physical_device: PhysicalDevice,info: &DeviceCreateInfo) -> Device {
+        let device = unsafe { self.instance.create_device(physical_device, info, None) }.unwrap();
+        Device::from(device)
+    }
+
+    pub(crate) fn get_queue_family_properties(&self,physical_device: PhysicalDevice) -> Vec<crate::QueueFamilyProperties> {
+        let props = unsafe { self.instance.get_physical_device_queue_family_properties(physical_device) };
+        props.iter().map(|x| {
+            crate::QueueFamilyProperties::from(*x)
+        }).collect::<Vec<crate::QueueFamilyProperties>>()
+    }
+}
+
+impl Drop for Instance {
+    fn drop(&mut self) {
+        unsafe {
+            self.instance.destroy_instance(None)
         }
     }
 }
