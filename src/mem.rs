@@ -23,7 +23,7 @@ impl DeviceMemory {
         unsafe { device.allocate_memory(&info.build(), None) }.unwrap()
     }
 
-    fn alloc_image_memory(device: &ash::Device,image: ash::vk::Image,mem_props: PhysicalDeviceMemoryProperties,mem_req: MemoryRequirements) -> Self {
+    pub fn alloc_image_memory(device: &ash::Device,image: ash::vk::Image,mem_props: PhysicalDeviceMemoryProperties,mem_req: MemoryRequirements) -> Self {
         let memory = Self::alloc(device,mem_props,mem_req);
         unsafe {
             device.bind_image_memory(image, memory, 0).unwrap();

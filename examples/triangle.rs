@@ -1,6 +1,8 @@
+use simple_logger::SimpleLogger;
 use gear::{CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Image, ImageDescriptor, InstanceBuilder};
 
 fn main() {
+    SimpleLogger::new().init().unwrap();
     let instance = InstanceBuilder::new().build();
     let connecters = instance.enumerate_connecters();
     let mut index = 0;

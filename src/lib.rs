@@ -1,6 +1,9 @@
+#[macro_use]
+extern crate log;
+
 use std::{borrow::Cow, ffi::CStr};
 
-use ash::vk::{self, DeviceCreateInfo, DeviceQueueCreateInfo, QueueFlags};
+use ash::vk::{self, DebugUtilsMessageSeverityFlagsEXT, DeviceCreateInfo, DeviceQueueCreateInfo, QueueFlags};
 
 mod device;
 mod instance;
@@ -136,9 +139,13 @@ unsafe extern "system" fn vulkan_debug_callback(
         CStr::from_ptr(callback_data.p_message).to_string_lossy()
     };
 
-    println!(
-        "{message_severity:?}:\n{message_type:?} [{message_id_name} ({message_id_number})] : {message}\n",
-    );
+    match message_severity {
+        DebugUtilsMessageSeverityFlagsEXT::INFO => info!("[Vulkan] {}",message), 
+        DebugUtilsMessageSeverityFlagsEXT::WARNING => warn!("[Vulkan] {}",message), 
+        DebugUtilsMessageSeverityFlagsEXT::VERBOSE => trace!("[Vulkan] {}",message), 
+        DebugUtilsMessageSeverityFlagsEXT::ERROR => error!("[Vulkan] {}",message),  
+        _ => todo!()
+    }
 
     vk::FALSE
 }
