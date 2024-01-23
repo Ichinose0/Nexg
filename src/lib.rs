@@ -1,14 +1,16 @@
 use std::{borrow::Cow, ffi::CStr};
 
-use ash::vk::{self, DeviceCreateInfo, QueueFlags};
+use ash::vk::{self, DeviceCreateInfo, DeviceQueueCreateInfo, QueueFlags};
 
 mod device;
 mod instance;
 mod queue;
+mod recorder;
 
 pub use device::*;
 pub use instance::*;
 pub use queue::*;
+pub use recorder::*;
 
 pub struct QueueFamilyProperties {
     graphic_support: bool,
@@ -39,8 +41,9 @@ impl QueueFamilyProperties {
 pub struct DeviceConnecter<'a>(pub(crate) ash::vk::PhysicalDevice,&'a Instance);
 
 impl<'a> DeviceConnecter<'a> {
-    pub fn create_device(&self) -> Device {
-        let create_info = DeviceCreateInfo::builder().build();
+    pub fn create_device(&self,queue_family_index: usize) -> Device {
+        let queue_infos = vec![DeviceQueueCreateInfo::builder().queue_family_index(queue_family_index as u32).queue_priorities(&[1.0]).build()];
+        let create_info = DeviceCreateInfo::builder().queue_create_infos(&queue_infos).build();
         let device = self.1.create_device(self.0, &create_info);
         device
     }
