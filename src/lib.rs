@@ -6,11 +6,13 @@ mod device;
 mod instance;
 mod queue;
 mod recorder;
+mod image;
 
 pub use device::*;
 pub use instance::*;
 pub use queue::*;
 pub use recorder::*;
+pub use image::*;
 
 pub struct QueueFamilyProperties {
     graphic_support: bool,
@@ -67,6 +69,44 @@ impl From<ash::vk::QueueFamilyProperties> for QueueFamilyProperties {
     }
 }
 
+pub struct Extent3d {
+    width: u32,
+    height: u32,
+    depth: u32
+}
+
+impl Extent3d {
+    pub fn new(width: u32,height: u32,depth: u32) -> Self {
+        Self {
+            width,
+            height,
+            depth
+        }
+    }
+
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
+
+    pub fn depth(&self) -> u32 {
+        self.depth
+    }
+}
+
+impl Into<ash::vk::Extent3D> for Extent3d {
+    fn into(self) -> ash::vk::Extent3D {
+        Extent3D {
+            width: self.width,
+            height: self.height,
+            depth: self.depth
+        }
+    }
+}
+
 #[doc(hidden)]
 unsafe extern "system" fn vulkan_debug_callback(
     message_severity: vk::DebugUtilsMessageSeverityFlagsEXT,
@@ -102,6 +142,6 @@ mod tests {
 
     #[test]
     fn it_works() {
-        
+
     }
 }
