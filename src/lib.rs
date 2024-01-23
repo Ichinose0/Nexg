@@ -10,6 +10,7 @@ mod instance;
 mod queue;
 mod recorder;
 mod image;
+mod surface;
 mod mem;
 
 pub use device::*;
@@ -18,6 +19,8 @@ pub use queue::*;
 pub use recorder::*;
 pub use image::*;
 pub(crate) use mem::*;
+#[cfg(feature="window")]
+pub use surface::*;
 
 pub struct QueueFamilyProperties {
     graphic_support: bool,

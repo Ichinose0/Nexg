@@ -69,8 +69,8 @@ impl InstanceBuilder {
 }
 
 pub struct Instance {
-    instance: ash::Instance,
-    entry: Entry,
+    pub(crate) instance: ash::Instance,
+    pub(crate) entry: Entry,
 
     debug_utils: DebugUtils,
     debug_call_back: DebugUtilsMessengerEXT
