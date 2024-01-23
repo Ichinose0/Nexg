@@ -67,10 +67,7 @@ impl From<ash::vk::QueueFamilyProperties> for QueueFamilyProperties {
     }
 }
 
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
-
+#[doc(hidden)]
 unsafe extern "system" fn vulkan_debug_callback(
     message_severity: vk::DebugUtilsMessageSeverityFlagsEXT,
     message_type: vk::DebugUtilsMessageTypeFlagsEXT,
@@ -105,7 +102,6 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+        
     }
 }

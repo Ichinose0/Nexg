@@ -21,6 +21,7 @@ impl CommandPoolDescriptor {
 pub struct CommandPool(pub(crate) CommandPool);
 
 impl CommandPool {
+    #[doc(hidden)]
     pub(crate) fn create(device: &ash::Device,descriptor: &CommandPoolDescriptor) -> Self {
         let queue_family_index = descriptor.queue_family_index.unwrap();
         let create_info = CommandPoolCreateInfo::builder().queue_family_index(queue_family_index as u32).build();
@@ -47,6 +48,7 @@ pub struct CommandRecorder<'a> {
 }
 
 impl<'a> CommandRecorder<'a> {
+    #[doc(hidden)]
     pub(crate) fn create(device: &'a Device,pool: CommandPool,descriptor: &CommandRecorderDescriptor) -> Vec<Self> {
         let create_info = CommandBufferAllocateInfo::builder().command_pool(pool.0).command_buffer_count(descriptor.recorder_count).level(CommandBufferLevel::PRIMARY).build();
         let buffers = unsafe { device.device.allocate_command_buffers(&create_info,None) }.unwrap();

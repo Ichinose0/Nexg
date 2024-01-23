@@ -4,17 +4,21 @@ use ash::{vk::InstanceCreateInfo, Entry};
 
 use crate::{vulkan_debug_callback, Device, DeviceConnecter};
 
+/// Represents an additional feature of the instance.
 pub struct InstanceFeature {
     extensions: Vec<*const i8>
 }
 
 impl InstanceFeature {
+    /// Empty InstanceFeature, no additional functionality.
     pub fn empty() -> Self {
         Self {
             extensions: vec![]
         }
     }
 
+    /// Enable Surface.
+    /// "window" feature is required.
     #[cfg(feature = "window")]
     pub fn use_surface(&mut self,handle: &impl raw_window_handle::HasRawDisplayHandle) {
         let ext = ash_window::enumerate_required_extensions(handle.raw_display_handle()).unwrap();
@@ -73,6 +77,33 @@ pub struct Instance {
 }
 
 impl Instance {
+    /// Enumerate available connectors.
+    /// You can get the appropriate connector by getting the QueueFamilyProperties from the connector.
+    /// # Example
+    ///```
+    /// use gear::{InstanceBuilder,CommandPoolDescriptor,CommandRecorderDescriptor};
+    /// fn main() {
+    ///     let instance = InstanceBuilder::new().build();
+    ///     let connecters = instance.enumerate_connecters();
+    ///     let mut index = 0;
+    ///     let mut found_device = false;
+    ///     for i in &connecters {
+    ///         let properties = i.get_queue_family_properties();
+    ///         for i in properties {
+    ///             if i.is_compute_support() {
+    ///                 index = 0;
+    ///                 found_device = true;
+    ///                 break;
+    ///             }
+    ///         }
+    ///     }
+    ///     if !found_device {
+    ///         panic!("No suitable device found.")
+    ///     }
+    /// 
+    ///     let connecter = connecters[index];
+    /// }
+    ///```
     pub fn enumerate_connecters(&self) -> Vec<DeviceConnecter> {
         let devices = unsafe { self.instance.enumerate_physical_devices() }.unwrap();
         let devices = devices.iter().map(|x| {
@@ -81,11 +112,13 @@ impl Instance {
         devices
     }
 
+    /// Get the first connector.
     pub fn default_connector(&self) -> DeviceConnecter {
         let devices = self.enumerate_connecters();
         devices[0]
     }
 
+    /// Get the version of Vulkan currently in use.
     pub fn vulkan_version(&self) -> Option<String> {
         match self.entry.try_enumerate_instance_version() {
             Ok(v) => {
@@ -103,11 +136,13 @@ impl Instance {
         }
     }
 
+    #[doc(hidden)]
     pub(crate) fn create_device(&self,physical_device: PhysicalDevice,info: &DeviceCreateInfo) -> Device {
         let device = unsafe { self.instance.create_device(physical_device, info, None) }.unwrap();
         Device::from(device)
     }
 
+    #[doc(hidden)]
     pub(crate) fn get_queue_family_properties(&self,physical_device: PhysicalDevice) -> Vec<crate::QueueFamilyProperties> {
         let props = unsafe { self.instance.get_physical_device_queue_family_properties(physical_device) };
         props.iter().map(|x| {

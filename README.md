@@ -1,2 +1,1 @@
-# gear
-Low-level graphic api in Rust
+# Gear - Low-level fast GPU Api
