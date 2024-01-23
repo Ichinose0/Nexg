@@ -7,12 +7,14 @@ mod instance;
 mod queue;
 mod recorder;
 mod image;
+mod mem;
 
 pub use device::*;
 pub use instance::*;
 pub use queue::*;
 pub use recorder::*;
 pub use image::*;
+pub(crate) use mem::*;
 
 pub struct QueueFamilyProperties {
     graphic_support: bool,
@@ -43,15 +45,19 @@ impl QueueFamilyProperties {
 pub struct DeviceConnecter<'a>(pub(crate) ash::vk::PhysicalDevice,&'a Instance);
 
 impl<'a> DeviceConnecter<'a> {
-    pub fn create_device(&self,queue_family_index: usize) -> Device {
+    pub fn create_device(self,queue_family_index: usize) -> Device {
         let queue_infos = vec![DeviceQueueCreateInfo::builder().queue_family_index(queue_family_index as u32).queue_priorities(&[1.0]).build()];
         let create_info = DeviceCreateInfo::builder().queue_create_infos(&queue_infos).build();
-        let device = self.1.create_device(self.0, &create_info);
+        let device = self.1.create_device(self, &create_info);
         device
     }
 
     pub fn get_queue_family_properties(&self) -> Vec<QueueFamilyProperties> {
         self.1.get_queue_family_properties(self.0)
+    }
+
+    pub(crate) fn get_memory_properties(&self) -> ash::vk::PhysicalDeviceMemoryProperties {
+        self.1.get_memory_properties(self.0)
     }
 }
 
@@ -69,6 +75,7 @@ impl From<ash::vk::QueueFamilyProperties> for QueueFamilyProperties {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Extent3d {
     width: u32,
     height: u32,
@@ -99,7 +106,7 @@ impl Extent3d {
 
 impl Into<ash::vk::Extent3D> for Extent3d {
     fn into(self) -> ash::vk::Extent3D {
-        Extent3D {
+        ash::vk::Extent3D {
             width: self.width,
             height: self.height,
             depth: self.depth

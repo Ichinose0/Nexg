@@ -1,4 +1,4 @@
-use ash::vk::{CommandPool,CommandPoolCreateInfo,CommandBuffer,CommandBufferAllocateInfo,CommandBufferLevel,CommandBufferBeginInfo};
+use ash::vk::{CommandPoolCreateInfo,CommandBuffer,CommandBufferAllocateInfo,CommandBufferLevel,CommandBufferBeginInfo};
 use crate::Device;
 
 pub struct CommandPoolDescriptor {
@@ -18,7 +18,7 @@ impl CommandPoolDescriptor {
     }
 }
 
-pub struct CommandPool(pub(crate) CommandPool);
+pub struct CommandPool(pub(crate) ash::vk::CommandPool);
 
 impl CommandPool {
     #[doc(hidden)]
@@ -51,11 +51,11 @@ impl<'a> CommandRecorder<'a> {
     #[doc(hidden)]
     pub(crate) fn create(device: &'a Device,pool: CommandPool,descriptor: &CommandRecorderDescriptor) -> Vec<Self> {
         let create_info = CommandBufferAllocateInfo::builder().command_pool(pool.0).command_buffer_count(descriptor.recorder_count).level(CommandBufferLevel::PRIMARY).build();
-        let buffers = unsafe { device.device.allocate_command_buffers(&create_info,None) }.unwrap();
+        let buffers = unsafe { device.device.allocate_command_buffers(&create_info) }.unwrap();
         assert_eq!(descriptor.recorder_count,buffers.len() as u32);
         buffers.iter().map(|x| {
             Self {
-                buffer: x,
+                buffer: *x,
                 device
             }
         }).collect::<Vec<Self>>()
@@ -64,13 +64,13 @@ impl<'a> CommandRecorder<'a> {
     pub fn begin(&self) {
         let create_info = CommandBufferBeginInfo::builder().build();
         unsafe {
-            device.device.begin_command_buffer(self.buffer,&create_info).unwrap()
+            self.device.device.begin_command_buffer(self.buffer,&create_info).unwrap()
         }
     }
 
     pub fn end(&self) {
         unsafe {
-            device.device.end_command_buffer(self.buffer).unwrap();
+            self.device.device.end_command_buffer(self.buffer).unwrap();
         }
     }
 }

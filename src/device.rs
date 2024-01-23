@@ -1,4 +1,4 @@
-use crate::{Instance, Queue,CommandPool,CommandRecorder,CommandRecorderDescriptor};
+use crate::{CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, DeviceConnecter, Instance, Queue};
 
 pub struct Device {
     pub(crate) device: ash::Device,
@@ -23,7 +23,7 @@ impl Device {
 
     /// Allocate command recorder.
     pub fn allocate_command_recorder(&self,pool: CommandPool,descriptor: &CommandRecorderDescriptor) -> Vec<CommandRecorder> {
-        CommandRecorder::create(&self.device,descriptor)
+        CommandRecorder::create(&self,pool,descriptor)
     }
 }
 

@@ -5,13 +5,13 @@ use ash::vk::{CommandBuffer,Fence,SubmitInfo};
 pub struct Queue<'a>(pub(crate) ash::vk::Queue,pub(crate) &'a Device);
 
 impl<'a> Queue<'a> {
-    pub fn submit(&self,recorders: Vec<CommandRecorder>) {
+    pub fn submit(&self,recorders: &[CommandRecorder]) {
         let buffers = recorders.iter().map(|x| {
-            x.buffeer
+            x.buffer
         }).collect::<Vec<CommandBuffer>>();
         let submit_info = SubmitInfo::builder().command_buffers(&buffers).build();
         unsafe {
-            self.1.queue_submit(self.0,&[submit_info],Fence::null()).unwrap();
+            self.1.device.queue_submit(self.0,&[submit_info],Fence::null()).unwrap();
         }
     }
 }

@@ -1,5 +1,5 @@
 use ash::extensions::ext::DebugUtils;
-use ash::vk::{self, DebugUtilsMessengerEXT, DeviceCreateInfo, PhysicalDevice};
+use ash::vk::{self, DebugUtilsMessengerEXT, DeviceCreateInfo, MemoryRequirements, PhysicalDevice, PhysicalDeviceMemoryProperties};
 use ash::{vk::InstanceCreateInfo, Entry};
 
 use crate::{vulkan_debug_callback, Device, DeviceConnecter};
@@ -137,8 +137,8 @@ impl Instance {
     }
 
     #[doc(hidden)]
-    pub(crate) fn create_device(&self,physical_device: PhysicalDevice,info: &DeviceCreateInfo) -> Device {
-        let device = unsafe { self.instance.create_device(physical_device, info, None) }.unwrap();
+    pub(crate) fn create_device(&self,connecter: DeviceConnecter,info: &DeviceCreateInfo) -> Device {
+        let device = unsafe { self.instance.create_device(connecter.0, info, None) }.unwrap();
         Device::from(device)
     }
 
@@ -148,6 +148,13 @@ impl Instance {
         props.iter().map(|x| {
             crate::QueueFamilyProperties::from(*x)
         }).collect::<Vec<crate::QueueFamilyProperties>>()
+    }
+
+    #[doc(hidden)]
+    pub(crate) fn get_memory_properties(&self,physical_device: PhysicalDevice) -> PhysicalDeviceMemoryProperties {
+        unsafe {
+            self.instance.get_physical_device_memory_properties(physical_device)
+        }
     }
 }
 
