@@ -1,5 +1,8 @@
+use fgl::{
+    CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Image, ImageDescriptor,
+    InstanceBuilder,
+};
 use simple_logger::SimpleLogger;
-use fgl::{CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Image, ImageDescriptor, InstanceBuilder};
 
 fn main() {
     SimpleLogger::new().init().unwrap();
@@ -28,9 +31,9 @@ fn main() {
     let desc = CommandPoolDescriptor::new().queue_family_index(index);
     let pool = device.create_command_pool(&desc);
     let desc = CommandRecorderDescriptor::new();
-    let recorders = device.allocate_command_recorder(pool,&desc);
+    let recorders = device.allocate_command_recorder(pool, &desc);
     let desc = ImageDescriptor::new().extent(Extent3d::new(640, 480, 1));
-    let image = Image::create(&device,connecter,&desc);
+    let image = Image::create(&device, connecter, &desc);
 
     recorders[0].begin();
     recorders[0].end();

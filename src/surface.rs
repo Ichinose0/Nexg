@@ -8,13 +8,22 @@ pub struct Surface {
 }
 
 impl Surface {
-    pub fn new(instance: &Instance,handle: &(impl HasRawWindowHandle+HasRawDisplayHandle)) -> Self {
-        let surface = ash::extensions::khr::Surface::new(&instance.entry,&instance.instance);
-        let khr = unsafe { ash_window::create_surface(&instance.entry, &instance.instance, handle.raw_display_handle(), handle.raw_window_handle(), None) }.unwrap();
-        Self {
-            surface,
-            khr,
+    pub fn new(
+        instance: &Instance,
+        handle: &(impl HasRawWindowHandle + HasRawDisplayHandle),
+    ) -> Self {
+        let surface = ash::extensions::khr::Surface::new(&instance.entry, &instance.instance);
+        let khr = unsafe {
+            ash_window::create_surface(
+                &instance.entry,
+                &instance.instance,
+                handle.raw_display_handle(),
+                handle.raw_window_handle(),
+                None,
+            )
         }
+        .unwrap();
+        Self { surface, khr }
     }
 }
 

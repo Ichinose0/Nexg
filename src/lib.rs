@@ -3,28 +3,35 @@ extern crate log;
 
 use std::{borrow::Cow, ffi::CStr};
 
-use ash::vk::{self, DebugUtilsMessageSeverityFlagsEXT, DeviceCreateInfo, DeviceQueueCreateInfo, QueueFlags, SurfaceCapabilitiesKHR};
+use ash::vk::{
+    self, DebugUtilsMessageSeverityFlagsEXT, DeviceCreateInfo, DeviceQueueCreateInfo, QueueFlags,
+    SurfaceCapabilitiesKHR,
+};
 
 mod device;
+mod image;
 mod instance;
+mod mem;
+mod pipeline;
 mod queue;
 mod recorder;
-mod image;
-#[cfg(feature="window")]
+mod renderpass;
+#[cfg(feature = "window")]
 mod surface;
-#[cfg(feature="window")]
+#[cfg(feature = "window")]
 mod swapchain;
-mod mem;
 
 pub use device::*;
+pub use image::*;
 pub use instance::*;
+pub(crate) use mem::*;
+pub use pipeline::*;
 pub use queue::*;
 pub use recorder::*;
-pub use image::*;
-pub(crate) use mem::*;
-#[cfg(feature="window")]
+pub use renderpass::*;
+#[cfg(feature = "window")]
 pub use surface::*;
-#[cfg(feature="window")]
+#[cfg(feature = "window")]
 pub use swapchain::*;
 
 pub struct QueueFamilyProperties {
@@ -53,17 +60,26 @@ impl QueueFamilyProperties {
 }
 
 #[derive(Clone, Copy)]
-pub struct DeviceConnecter<'a>(pub(crate) ash::vk::PhysicalDevice,&'a Instance);
+pub struct DeviceConnecter<'a>(pub(crate) ash::vk::PhysicalDevice, &'a Instance);
 
 impl<'a> DeviceConnecter<'a> {
-    pub fn create_device(self,queue_family_index: usize) -> Device {
-        let extensions = &self.1.device_exts.iter().map(|x| {
-            match x {
+    pub fn create_device(self, queue_family_index: usize) -> Device {
+        let extensions = &self
+            .1
+            .device_exts
+            .iter()
+            .map(|x| match x {
                 DeviceFeature::Swapchain => ash::extensions::khr::Swapchain::name().as_ptr(),
-            }
-        }).collect::<Vec<*const i8>>();
-        let queue_infos = vec![DeviceQueueCreateInfo::builder().queue_family_index(queue_family_index as u32).queue_priorities(&[1.0]).build()];
-        let create_info = DeviceCreateInfo::builder().queue_create_infos(&queue_infos).enabled_extension_names(&extensions).build();
+            })
+            .collect::<Vec<*const i8>>();
+        let queue_infos = vec![DeviceQueueCreateInfo::builder()
+            .queue_family_index(queue_family_index as u32)
+            .queue_priorities(&[1.0])
+            .build()];
+        let create_info = DeviceCreateInfo::builder()
+            .queue_create_infos(&queue_infos)
+            .enabled_extension_names(&extensions)
+            .build();
         let device = self.1.create_device(self, &create_info);
         device
     }
@@ -78,9 +94,14 @@ impl<'a> DeviceConnecter<'a> {
     }
 
     #[doc(hidden)]
-    #[cfg(feature="window")]
+    #[cfg(feature = "window")]
     pub(crate) fn is_support_swapchain(&self) -> bool {
-        let features = unsafe { self.1.instance.enumerate_device_extension_properties(self.0) }.unwrap();
+        let features = unsafe {
+            self.1
+                .instance
+                .enumerate_device_extension_properties(self.0)
+        }
+        .unwrap();
         let mut support = false;
         for i in features {
             let name = unsafe { CStr::from_ptr(i.extension_name.as_ptr()) };
@@ -92,21 +113,42 @@ impl<'a> DeviceConnecter<'a> {
     }
 
     #[doc(hidden)]
-    #[cfg(feature="window")]
-    pub(crate) fn get_surface_capabilities(&self,surface: &Surface) -> ash::vk::SurfaceCapabilitiesKHR {
-        unsafe { surface.surface.get_physical_device_surface_capabilities(self.0, surface.khr).unwrap() } 
+    #[cfg(feature = "window")]
+    pub(crate) fn get_surface_capabilities(
+        &self,
+        surface: &Surface,
+    ) -> ash::vk::SurfaceCapabilitiesKHR {
+        unsafe {
+            surface
+                .surface
+                .get_physical_device_surface_capabilities(self.0, surface.khr)
+                .unwrap()
+        }
     }
 
     #[doc(hidden)]
-    #[cfg(feature="window")]
-    pub(crate) fn get_surface_formats(&self,surface: &Surface) -> Vec<ash::vk::SurfaceFormatKHR> {
-        unsafe { surface.surface.get_physical_device_surface_formats(self.0, surface.khr).unwrap() } 
+    #[cfg(feature = "window")]
+    pub(crate) fn get_surface_formats(&self, surface: &Surface) -> Vec<ash::vk::SurfaceFormatKHR> {
+        unsafe {
+            surface
+                .surface
+                .get_physical_device_surface_formats(self.0, surface.khr)
+                .unwrap()
+        }
     }
 
     #[doc(hidden)]
-    #[cfg(feature="window")]
-    pub(crate) fn get_surface_present_modes(&self,surface: &Surface) -> Vec<ash::vk::PresentModeKHR> {
-        unsafe { surface.surface.get_physical_device_surface_present_modes(self.0, surface.khr).unwrap() } 
+    #[cfg(feature = "window")]
+    pub(crate) fn get_surface_present_modes(
+        &self,
+        surface: &Surface,
+    ) -> Vec<ash::vk::PresentModeKHR> {
+        unsafe {
+            surface
+                .surface
+                .get_physical_device_surface_present_modes(self.0, surface.khr)
+                .unwrap()
+        }
     }
 }
 
@@ -114,12 +156,12 @@ impl From<ash::vk::QueueFamilyProperties> for QueueFamilyProperties {
     fn from(value: ash::vk::QueueFamilyProperties) -> Self {
         let graphic_support = value.queue_flags.contains(QueueFlags::GRAPHICS);
         let compute_support = value.queue_flags.contains(QueueFlags::COMPUTE);
-        let transfer_support =  value.queue_flags.contains(QueueFlags::TRANSFER);
+        let transfer_support = value.queue_flags.contains(QueueFlags::TRANSFER);
         QueueFamilyProperties {
             graphic_support,
             compute_support,
             transfer_support,
-            queue_count: value.queue_count
+            queue_count: value.queue_count,
         }
     }
 }
@@ -128,15 +170,15 @@ impl From<ash::vk::QueueFamilyProperties> for QueueFamilyProperties {
 pub struct Extent3d {
     width: u32,
     height: u32,
-    depth: u32
+    depth: u32,
 }
 
 impl Extent3d {
-    pub fn new(width: u32,height: u32,depth: u32) -> Self {
+    pub fn new(width: u32, height: u32, depth: u32) -> Self {
         Self {
             width,
             height,
-            depth
+            depth,
         }
     }
 
@@ -158,7 +200,7 @@ impl Into<ash::vk::Extent3D> for Extent3d {
         ash::vk::Extent3D {
             width: self.width,
             height: self.height,
-            depth: self.depth
+            depth: self.depth,
         }
     }
 }
@@ -186,11 +228,11 @@ unsafe extern "system" fn vulkan_debug_callback(
     };
 
     match message_severity {
-        DebugUtilsMessageSeverityFlagsEXT::INFO => info!("[Vulkan] {}",message), 
-        DebugUtilsMessageSeverityFlagsEXT::WARNING => warn!("[Vulkan] {}",message), 
-        DebugUtilsMessageSeverityFlagsEXT::VERBOSE => trace!("[Vulkan] {}",message), 
-        DebugUtilsMessageSeverityFlagsEXT::ERROR => error!("[Vulkan] {}",message),  
-        _ => todo!()
+        DebugUtilsMessageSeverityFlagsEXT::INFO => info!("[Vulkan] {}", message),
+        DebugUtilsMessageSeverityFlagsEXT::WARNING => warn!("[Vulkan] {}", message),
+        DebugUtilsMessageSeverityFlagsEXT::VERBOSE => trace!("[Vulkan] {}", message),
+        DebugUtilsMessageSeverityFlagsEXT::ERROR => error!("[Vulkan] {}", message),
+        _ => todo!(),
     }
 
     vk::FALSE
@@ -201,7 +243,5 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
-
-    }
+    fn it_works() {}
 }
