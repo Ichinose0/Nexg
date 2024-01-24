@@ -1,5 +1,5 @@
 use simple_logger::SimpleLogger;
-use gear::{CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Image, ImageDescriptor, InstanceBuilder};
+use fgl::{CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Image, ImageDescriptor, InstanceBuilder};
 
 fn main() {
     SimpleLogger::new().init().unwrap();

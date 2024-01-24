@@ -1,5 +1,5 @@
 [package]
-name = "gear"
+name = "fgl"
 version = "0.1.0"
 edition = "2021"
 
@@ -18,3 +18,4 @@ raw-window-handle = { version = "0.5.0", optional = true }
 
 [dev-dependencies]
 simple_logger = "4.3.3"
+winit = "0.28.7"

@@ -1,5 +1,9 @@
 use crate::{CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, DeviceConnecter, Instance, Queue};
 
+pub(crate) enum DeviceFeature {
+    Swapchain
+}
+
 pub struct Device {
     pub(crate) device: ash::Device,
 }

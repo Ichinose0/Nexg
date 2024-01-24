@@ -3,8 +3,8 @@ use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 use crate::Instance;
 
 pub struct Surface {
-    surface: ash::extensions::khr::Surface,
-    khr: ash::vk::SurfaceKHR,
+    pub(crate) surface: ash::extensions::khr::Surface,
+    pub(crate) khr: ash::vk::SurfaceKHR,
 }
 
 impl Surface {

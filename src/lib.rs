@@ -3,14 +3,17 @@ extern crate log;
 
 use std::{borrow::Cow, ffi::CStr};
 
-use ash::vk::{self, DebugUtilsMessageSeverityFlagsEXT, DeviceCreateInfo, DeviceQueueCreateInfo, QueueFlags};
+use ash::vk::{self, DebugUtilsMessageSeverityFlagsEXT, DeviceCreateInfo, DeviceQueueCreateInfo, QueueFlags, SurfaceCapabilitiesKHR};
 
 mod device;
 mod instance;
 mod queue;
 mod recorder;
 mod image;
+#[cfg(feature="window")]
 mod surface;
+#[cfg(feature="window")]
+mod swapchain;
 mod mem;
 
 pub use device::*;
@@ -21,6 +24,8 @@ pub use image::*;
 pub(crate) use mem::*;
 #[cfg(feature="window")]
 pub use surface::*;
+#[cfg(feature="window")]
+pub use swapchain::*;
 
 pub struct QueueFamilyProperties {
     graphic_support: bool,
@@ -52,8 +57,13 @@ pub struct DeviceConnecter<'a>(pub(crate) ash::vk::PhysicalDevice,&'a Instance);
 
 impl<'a> DeviceConnecter<'a> {
     pub fn create_device(self,queue_family_index: usize) -> Device {
+        let extensions = &self.1.device_exts.iter().map(|x| {
+            match x {
+                DeviceFeature::Swapchain => ash::extensions::khr::Swapchain::name().as_ptr(),
+            }
+        }).collect::<Vec<*const i8>>();
         let queue_infos = vec![DeviceQueueCreateInfo::builder().queue_family_index(queue_family_index as u32).queue_priorities(&[1.0]).build()];
-        let create_info = DeviceCreateInfo::builder().queue_create_infos(&queue_infos).build();
+        let create_info = DeviceCreateInfo::builder().queue_create_infos(&queue_infos).enabled_extension_names(&extensions).build();
         let device = self.1.create_device(self, &create_info);
         device
     }
@@ -62,8 +72,41 @@ impl<'a> DeviceConnecter<'a> {
         self.1.get_queue_family_properties(self.0)
     }
 
+    #[doc(hidden)]
     pub(crate) fn get_memory_properties(&self) -> ash::vk::PhysicalDeviceMemoryProperties {
         self.1.get_memory_properties(self.0)
+    }
+
+    #[doc(hidden)]
+    #[cfg(feature="window")]
+    pub(crate) fn is_support_swapchain(&self) -> bool {
+        let features = unsafe { self.1.instance.enumerate_device_extension_properties(self.0) }.unwrap();
+        let mut support = false;
+        for i in features {
+            let name = unsafe { CStr::from_ptr(i.extension_name.as_ptr()) };
+            if name == ash::extensions::khr::Swapchain::name() {
+                support = true;
+            }
+        }
+        support
+    }
+
+    #[doc(hidden)]
+    #[cfg(feature="window")]
+    pub(crate) fn get_surface_capabilities(&self,surface: &Surface) -> ash::vk::SurfaceCapabilitiesKHR {
+        unsafe { surface.surface.get_physical_device_surface_capabilities(self.0, surface.khr).unwrap() } 
+    }
+
+    #[doc(hidden)]
+    #[cfg(feature="window")]
+    pub(crate) fn get_surface_formats(&self,surface: &Surface) -> Vec<ash::vk::SurfaceFormatKHR> {
+        unsafe { surface.surface.get_physical_device_surface_formats(self.0, surface.khr).unwrap() } 
+    }
+
+    #[doc(hidden)]
+    #[cfg(feature="window")]
+    pub(crate) fn get_surface_present_modes(&self,surface: &Surface) -> Vec<ash::vk::PresentModeKHR> {
+        unsafe { surface.surface.get_physical_device_surface_present_modes(self.0, surface.khr).unwrap() } 
     }
 }
 

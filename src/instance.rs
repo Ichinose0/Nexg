@@ -2,18 +2,20 @@ use ash::extensions::ext::DebugUtils;
 use ash::vk::{self, DebugUtilsMessengerEXT, DeviceCreateInfo, MemoryRequirements, PhysicalDevice, PhysicalDeviceMemoryProperties};
 use ash::{vk::InstanceCreateInfo, Entry};
 
-use crate::{vulkan_debug_callback, Device, DeviceConnecter};
+use crate::{vulkan_debug_callback, Device, DeviceConnecter, DeviceFeature};
 
 /// Represents an additional feature of the instance.
 pub struct InstanceFeature {
-    extensions: Vec<*const i8>
+    extensions: Vec<*const i8>,
+    device_exts: Vec<DeviceFeature>
 }
 
 impl InstanceFeature {
     /// Empty InstanceFeature, no additional functionality.
     pub fn empty() -> Self {
         Self {
-            extensions: vec![]
+            extensions: vec![],
+            device_exts: vec![]
         }
     }
 
@@ -25,6 +27,7 @@ impl InstanceFeature {
         for i in ext {
             self.extensions.push(*i);
         }
+        self.device_exts.push(DeviceFeature::Swapchain);
     }
 }
 
@@ -43,6 +46,11 @@ impl InstanceBuilder {
         Self {
             feature: Default::default()
         }
+    }
+
+    pub fn feature(mut self,feature: InstanceFeature) -> Self {
+        self.feature = feature;
+        self
     }
 
     pub fn build(mut self) -> Instance {
@@ -64,13 +72,15 @@ impl InstanceBuilder {
         let debug_utils = DebugUtils::new(&entry, &instance);
         let debug_call_back =
             unsafe { debug_utils.create_debug_utils_messenger(&debug_info, None) }.unwrap();
-        Instance { instance, entry, debug_utils, debug_call_back }
+        Instance { instance, entry, device_exts: self.feature.device_exts,debug_utils, debug_call_back }
     }
 }
 
 pub struct Instance {
     pub(crate) instance: ash::Instance,
     pub(crate) entry: Entry,
+
+    pub(crate) device_exts: Vec<DeviceFeature>, 
 
     debug_utils: DebugUtils,
     debug_call_back: DebugUtilsMessengerEXT
