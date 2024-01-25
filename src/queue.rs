@@ -17,6 +17,7 @@ impl<'a> Queue<'a> {
                 .device
                 .queue_submit(self.0, &[submit_info], Fence::null())
                 .unwrap();
+            self.1.device.queue_wait_idle(self.0).unwrap();
         }
     }
 }

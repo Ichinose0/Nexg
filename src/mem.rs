@@ -1,7 +1,9 @@
-use ash::vk::{MemoryAllocateInfo, MemoryRequirements, PhysicalDeviceMemoryProperties};
+use ash::vk::{
+    MemoryAllocateInfo, MemoryPropertyFlags, MemoryRequirements, PhysicalDeviceMemoryProperties,
+};
 
 pub struct DeviceMemory {
-    memory: ash::vk::DeviceMemory,
+    pub(crate) memory: ash::vk::DeviceMemory,
 }
 
 impl DeviceMemory {
@@ -14,7 +16,12 @@ impl DeviceMemory {
         let mut mem_found = false;
 
         for i in 0..mem_props.memory_type_count {
-            if (mem_req.memory_type_bits & (1 << i)) != 0 {
+            if (mem_req.memory_type_bits & (1 << i)) != 0
+                && (mem_props.memory_types[i as usize].property_flags
+                    & MemoryPropertyFlags::HOST_VISIBLE)
+                    .as_raw()
+                    != 0
+            {
                 info.memory_type_index = i;
                 mem_found = true;
             }

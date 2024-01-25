@@ -72,13 +72,13 @@ impl<'a> PipelineDescriptor<'a> {
     }
 
     #[inline]
-    pub fn width(mut self,width :u32) -> Self {
+    pub fn width(mut self, width: u32) -> Self {
         self.width = width;
         self
     }
 
     #[inline]
-    pub fn height(mut self,height :u32) -> Self {
+    pub fn height(mut self, height: u32) -> Self {
         self.height = height;
         self
     }
@@ -101,15 +101,12 @@ impl<'a> PipelineLayout<'a> {
         let layout_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]).build();
         let layout = unsafe { device.device.create_pipeline_layout(&layout_info, None) }.unwrap();
 
-        Self {
-            layout,
-            device,
-        }
+        Self { layout, device }
     }
 }
 
 pub struct Pipeline {
-    pipeline: ash::vk::Pipeline,
+    pub(crate) pipeline: ash::vk::Pipeline,
 }
 
 impl Pipeline {

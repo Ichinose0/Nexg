@@ -9,12 +9,12 @@ use ash::vk::{
 };
 
 mod device;
+mod frame_buffer;
 mod image;
 mod instance;
 mod mem;
 mod pipeline;
 mod queue;
-mod frame_buffer;
 mod recorder;
 mod renderpass;
 mod shader;
@@ -23,8 +23,8 @@ mod surface;
 #[cfg(feature = "window")]
 mod swapchain;
 
-pub use frame_buffer::*;
 pub use device::*;
+pub use frame_buffer::*;
 pub use image::*;
 pub use instance::*;
 pub(crate) use mem::*;

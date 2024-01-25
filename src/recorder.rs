@@ -1,7 +1,7 @@
-use crate::Device;
+use crate::{Device, Pipeline, RenderPass, RenderPassBeginDescriptor};
 use ash::vk::{
-    CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferLevel,
-    CommandPoolCreateInfo,
+    ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo,
+    CommandBufferLevel, CommandPoolCreateInfo, PipelineBindPoint, SubpassContents,
 };
 
 pub struct CommandPoolDescriptor {
@@ -71,20 +71,51 @@ impl<'a> CommandRecorder<'a> {
     }
 
     #[inline]
-    pub fn begin(&self) {
+    pub fn begin(&self, descriptor: RenderPassBeginDescriptor) {
         let create_info = CommandBufferBeginInfo::builder().build();
         unsafe {
             self.device
                 .device
                 .begin_command_buffer(self.buffer, &create_info)
-                .unwrap()
+                .unwrap();
+            self.device.device.cmd_begin_render_pass(
+                self.buffer,
+                &descriptor.into(),
+                SubpassContents::INLINE,
+            );
         }
     }
 
     #[inline]
     pub fn end(&self) {
         unsafe {
+            self.device.device.cmd_end_render_pass(self.buffer);
             self.device.device.end_command_buffer(self.buffer).unwrap();
+        }
+    }
+
+    #[inline]
+    pub fn draw(
+        &self,
+        pipeline: &Pipeline,
+        vertex_count: u32,
+        instance_count: u32,
+        first_vertex: u32,
+        first_instance: u32,
+    ) {
+        unsafe {
+            self.device.device.cmd_bind_pipeline(
+                self.buffer,
+                PipelineBindPoint::GRAPHICS,
+                pipeline.pipeline,
+            );
+            self.device.device.cmd_draw(
+                self.buffer,
+                vertex_count,
+                instance_count,
+                first_vertex,
+                first_instance,
+            );
         }
     }
 }

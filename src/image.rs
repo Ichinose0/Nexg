@@ -1,6 +1,10 @@
+use std::os::raw::c_void;
+
 use crate::{Device, DeviceConnecter, DeviceMemory, Extent3d};
 use ash::vk::{
-    ComponentMapping, ComponentSwizzle, Format, ImageAspectFlags, ImageCreateInfo, ImageLayout, ImageSubresourceRange, ImageTiling, ImageUsageFlags, ImageViewCreateInfo, ImageViewType, SampleCountFlags, SharingMode
+    ComponentMapping, ComponentSwizzle, Format, ImageAspectFlags, ImageCreateInfo, ImageLayout,
+    ImageSubresourceRange, ImageTiling, ImageUsageFlags, ImageViewCreateInfo, ImageViewType,
+    MemoryMapFlags, MemoryPropertyFlags, SampleCountFlags, SharingMode,
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -52,6 +56,7 @@ impl ImageDescriptor {
 pub struct Image<'a> {
     image: ash::vk::Image,
     memory: DeviceMemory,
+    size: u64,
     device: &'a Device,
 }
 
@@ -76,12 +81,23 @@ impl<'a> Image<'a> {
         let image = unsafe { device.device.create_image(&create_info, None) }.unwrap();
         let mem_props = connecter.get_memory_properties();
         let mem_req = unsafe { device.device.get_image_memory_requirements(image) };
+
         let memory = DeviceMemory::alloc_image_memory(&device.device, image, mem_props, mem_req);
         Self {
             image,
             device,
+            size: mem_req.size,
             memory,
         }
+    }
+
+    pub fn map_memory(&self) -> *mut c_void {
+        unsafe {
+            self.device
+                .device
+                .map_memory(self.memory.memory, 0, self.size, MemoryMapFlags::empty())
+        }
+        .unwrap()
     }
 
     pub fn create_image_view(&self) -> ImageView {
@@ -90,15 +106,34 @@ impl<'a> Image<'a> {
 }
 
 pub struct ImageView {
-    pub(crate) image_view: ash::vk::ImageView
+    pub(crate) image_view: ash::vk::ImageView,
 }
 
 impl ImageView {
-    pub(crate) fn new(device: &Device,image: &Image) -> Self {
-        let create_info = ImageViewCreateInfo::builder().image(image.image).view_type(ImageViewType::TYPE_2D).format(Format::R8G8B8A8_UNORM).components(ComponentMapping::builder().r(ComponentSwizzle::IDENTITY).g(ComponentSwizzle::IDENTITY).b(ComponentSwizzle::IDENTITY).a(ComponentSwizzle::IDENTITY).build()).subresource_range(ImageSubresourceRange::builder().aspect_mask(ImageAspectFlags::COLOR).base_mip_level(0).level_count(1).base_array_layer(0).layer_count(1).build()).build();
+    pub(crate) fn new(device: &Device, image: &Image) -> Self {
+        let create_info = ImageViewCreateInfo::builder()
+            .image(image.image)
+            .view_type(ImageViewType::TYPE_2D)
+            .format(Format::R8G8B8A8_UNORM)
+            .components(
+                ComponentMapping::builder()
+                    .r(ComponentSwizzle::IDENTITY)
+                    .g(ComponentSwizzle::IDENTITY)
+                    .b(ComponentSwizzle::IDENTITY)
+                    .a(ComponentSwizzle::IDENTITY)
+                    .build(),
+            )
+            .subresource_range(
+                ImageSubresourceRange::builder()
+                    .aspect_mask(ImageAspectFlags::COLOR)
+                    .base_mip_level(0)
+                    .level_count(1)
+                    .base_array_layer(0)
+                    .layer_count(1)
+                    .build(),
+            )
+            .build();
         let image_view = unsafe { device.device.create_image_view(&create_info, None) }.unwrap();
-        Self {
-            image_view
-        }
+        Self { image_view }
     }
 }
