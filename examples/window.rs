@@ -1,7 +1,8 @@
 use fgl::{
     CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Image, ImageDescriptor,
-    InstanceBuilder, InstanceFeature, RenderPass, RenderPassDescriptor, SubPass, SubPassDescriptor,
-    Surface, Swapchain,
+    InstanceBuilder, InstanceFeature, Pipeline, PipelineDescriptor, PipelineLayout,
+    PipelineLayoutDescriptor, RenderPass, RenderPassDescriptor, Shader, ShaderKind, Spirv, SubPass,
+    SubPassDescriptor, Surface, Swapchain,
 };
 use simple_logger::SimpleLogger;
 use winit::{
@@ -10,6 +11,9 @@ use winit::{
     window::WindowBuilder,
 };
 
+const WIDTH: u32 = 640;
+const HEIGHT:u32 = 480;
+
 fn main() {
     SimpleLogger::new().init().unwrap();
 
@@ -17,9 +21,10 @@ fn main() {
 
     let window = WindowBuilder::new()
         .with_title("A fantastic window!")
-        .with_inner_size(winit::dpi::LogicalSize::new(128.0, 128.0))
+        .with_inner_size(winit::dpi::LogicalSize::new(WIDTH,HEIGHT))
         .build(&event_loop)
         .unwrap();
+    let size = window.inner_size();
 
     let mut feature = InstanceFeature::empty();
     feature.use_surface(&window);
@@ -53,14 +58,36 @@ fn main() {
     let pool = device.create_command_pool(&desc);
     let desc = CommandRecorderDescriptor::new();
     let recorders = device.allocate_command_recorder(pool, &desc);
-    let desc = ImageDescriptor::new().extent(Extent3d::new(640, 480, 1));
+    let desc = ImageDescriptor::new().extent(Extent3d::new(size.width,size.height, 1));
     let image = Image::create(&device, connecter, &desc);
 
+    let vertex = Shader::new(
+        &device,
+        Spirv::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/shader/shader.vert.spv"
+        )),
+        ShaderKind::Vertex,
+    );
+
+    let fragment = Shader::new(
+        &device,
+        Spirv::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/shader/shader.frag.spv"
+        )),
+        ShaderKind::Fragment,
+    );
+    let shaders = &[vertex, fragment];
     let desc = SubPassDescriptor::empty();
     let subpass = SubPass::new(connecter, &desc);
     let subpasses = &[subpass];
     let desc = RenderPassDescriptor::empty().subpasses(subpasses);
     let render_pass = RenderPass::new(&device, &desc);
+    let desc = PipelineLayoutDescriptor::empty().render_pass(&render_pass);
+    let pipeline_layout = PipelineLayout::new(&device, &desc);
+    let desc = PipelineDescriptor::empty().shaders(shaders).width(size.width).height(size.height);
+    let pipeline = Pipeline::new(&device, pipeline_layout, &render_pass, &desc);
 
     recorders[0].begin();
     recorders[0].end();

@@ -91,7 +91,7 @@ impl<'a> RenderPassDescriptor<'a> {
 }
 
 pub struct RenderPass {
-    render_pass: ash::vk::RenderPass,
+    pub(crate) render_pass: ash::vk::RenderPass,
 }
 
 impl RenderPass {

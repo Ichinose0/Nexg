@@ -16,6 +16,7 @@ mod pipeline;
 mod queue;
 mod recorder;
 mod renderpass;
+mod shader;
 #[cfg(feature = "window")]
 mod surface;
 #[cfg(feature = "window")]
@@ -29,6 +30,7 @@ pub use pipeline::*;
 pub use queue::*;
 pub use recorder::*;
 pub use renderpass::*;
+pub use shader::*;
 #[cfg(feature = "window")]
 pub use surface::*;
 #[cfg(feature = "window")]
