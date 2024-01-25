@@ -27,6 +27,7 @@ pub struct ImageDescriptor {
 }
 
 impl ImageDescriptor {
+    #[inline]
     pub fn new() -> Self {
         Self {
             image_type: ImageType::e2D,
@@ -36,11 +37,13 @@ impl ImageDescriptor {
         }
     }
 
+    #[inline]
     pub fn image_type(mut self, image_type: ImageType) -> Self {
         self.image_type = image_type;
         self
     }
 
+    #[inline]
     pub fn extent(mut self, extent: Extent3d) -> Self {
         self.extent = extent;
         self

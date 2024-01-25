@@ -23,6 +23,7 @@ pub struct PipelineDescriptor {
 }
 
 impl PipelineDescriptor {
+    #[inline]
     pub fn empty() -> Self {
         Self {
             width: 100,
@@ -38,6 +39,7 @@ pub struct Pipeline {
 }
 
 impl Pipeline {
+    #[inline]
     pub fn new(device: &Device,descriptor: &PipelineDescriptor) -> Self {
         let viewports = vec![Viewport::builder().width(descriptor.width as f32).height(descriptor.height as f32).min_depth(descriptor.min_depth).max_depth(descriptor.max_depth).x(0.0).y(0.0).build()];
         let scissors = vec![Rect2D::builder().offset(Offset2D::builder().x(0).y(0).build()).extent(Extent2D::builder().width(descriptor.width).height(descriptor.height).build()).build()];

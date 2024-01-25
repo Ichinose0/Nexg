@@ -5,6 +5,7 @@ use ash::vk::{CommandBuffer, Fence, SubmitInfo};
 pub struct Queue<'a>(pub(crate) ash::vk::Queue, pub(crate) &'a Device);
 
 impl<'a> Queue<'a> {
+    #[inline]
     pub fn submit(&self, recorders: &[CommandRecorder]) {
         let buffers = recorders
             .iter()

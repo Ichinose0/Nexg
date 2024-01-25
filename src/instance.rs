@@ -15,6 +15,7 @@ pub struct InstanceFeature {
 
 impl InstanceFeature {
     /// Empty InstanceFeature, no additional functionality.
+    #[inline]
     pub fn empty() -> Self {
         Self {
             extensions: vec![],
@@ -25,6 +26,7 @@ impl InstanceFeature {
     /// Enable Surface.
     /// "window" feature is required.
     #[cfg(feature = "window")]
+    #[inline]
     pub fn use_surface(&mut self, handle: &impl raw_window_handle::HasRawDisplayHandle) {
         let ext = ash_window::enumerate_required_extensions(handle.raw_display_handle()).unwrap();
         for i in ext {

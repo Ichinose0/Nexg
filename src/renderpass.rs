@@ -42,6 +42,7 @@ pub struct SubPassDescriptor {
 }
 
 impl SubPassDescriptor {
+    #[inline]
     pub fn empty() -> Self {
         Self {
             bind_point: BindPoint::Graphics,
@@ -54,6 +55,7 @@ pub struct SubPass {
 }
 
 impl SubPass {
+    #[inline]
     pub fn new(connecter: DeviceConnecter, descriptor: &SubPassDescriptor) -> Self {
         let attachment_refs = vec![AttachmentReference::builder()
             .attachment(0)

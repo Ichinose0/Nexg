@@ -70,6 +70,7 @@ impl<'a> CommandRecorder<'a> {
             .collect::<Vec<Self>>()
     }
 
+    #[inline]
     pub fn begin(&self) {
         let create_info = CommandBufferBeginInfo::builder().build();
         unsafe {
@@ -80,6 +81,7 @@ impl<'a> CommandRecorder<'a> {
         }
     }
 
+    #[inline]
     pub fn end(&self) {
         unsafe {
             self.device.device.end_command_buffer(self.buffer).unwrap();
