@@ -1,9 +1,5 @@
 use fgl::{
-    CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, FrameBuffer, FrameBufferDescriptor,
-    Image, ImageDescriptor, InstanceBuilder, InstanceFeature, Pipeline, PipelineDescriptor,
-    PipelineLayout, PipelineLayoutDescriptor, RenderPass, RenderPassBeginDescriptor,
-    RenderPassDescriptor, Shader, ShaderKind, Spirv, SubPass, SubPassDescriptor, Surface,
-    Swapchain,
+    CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Fence, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, InstanceBuilder, InstanceFeature, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, Spirv, SubPass, SubPassDescriptor, Surface, Swapchain
 };
 use simple_logger::SimpleLogger;
 use winit::{
@@ -60,8 +56,11 @@ fn main() {
     let desc = CommandRecorderDescriptor::new();
     let recorders = device.allocate_command_recorder(pool, &desc);
     let desc = ImageDescriptor::new().extent(Extent3d::new(size.width, size.height, 1));
-    let image = Image::create(&device, connecter, &desc);
-    let image_view = image.create_image_view();
+    let images = swapchain.images();
+    let mut swapchain_images = vec![];
+    for i in images {
+        swapchain_images.push(i.create_image_view());
+    }
 
     let vertex = Shader::new(
         &device,
@@ -94,27 +93,40 @@ fn main() {
         .height(size.height);
     let pipeline = Pipeline::new(&device, pipeline_layout, &render_pass, &desc);
 
-    let desc = FrameBufferDescriptor::empty()
+    
+    let mut frame_buffers = vec![];
+    for i in &swapchain_images {
+        let desc = FrameBufferDescriptor::empty()
         .render_pass(&render_pass)
-        .image_view(&image_view)
         .width(size.width)
+        .image_view(i)
         .height(size.height);
-    let framebuffer = FrameBuffer::new(&device, &desc);
+        frame_buffers.push(FrameBuffer::new(&device, &desc));
+    }
 
-    let begin_desc = RenderPassBeginDescriptor::empty()
-        .width(size.width)
-        .height(size.height)
-        .render_pass(&render_pass)
-        .frame_buffer(&framebuffer);
-    recorders[0].begin(begin_desc);
-    recorders[0].end();
-    recorders[0].draw(&pipeline[0], 3, 1, 0, 0);
-    queue.submit(&recorders);
+    let fence = Fence::new(&device);
+
+    let mut img = 0;
+    
 
     event_loop.run(move |event, _, control_flow| {
         control_flow.set_wait();
 
         match event {
+            Event::RedrawRequested(id) => {
+                img = swapchain.acquire_next_image(&fence);
+                let begin_desc = RenderPassBeginDescriptor::empty()
+        .width(size.width)
+        .height(size.height)
+        .render_pass(&render_pass)
+        .frame_buffer(&frame_buffers[img]);
+                recorders[0].reset();
+                recorders[0].begin(begin_desc);
+                recorders[0].draw(&pipeline[0], 3, 1, 0, 0);
+                recorders[0].end();
+
+                queue.submit(&recorders);
+            }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
                 window_id,
@@ -122,6 +134,7 @@ fn main() {
             Event::MainEventsCleared => {
                 window.request_redraw();
             }
+
             _ => (),
         }
     });

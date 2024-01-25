@@ -1,7 +1,8 @@
 use crate::{Device, Pipeline, RenderPass, RenderPassBeginDescriptor};
 use ash::vk::{
     ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo,
-    CommandBufferLevel, CommandPoolCreateInfo, PipelineBindPoint, SubpassContents,
+    CommandBufferLevel, CommandBufferResetFlags, CommandPoolCreateFlags, CommandPoolCreateInfo,
+    PipelineBindPoint, SubpassContents,
 };
 
 pub struct CommandPoolDescriptor {
@@ -29,6 +30,7 @@ impl CommandPool {
         let queue_family_index = descriptor.queue_family_index.unwrap();
         let create_info = CommandPoolCreateInfo::builder()
             .queue_family_index(queue_family_index as u32)
+            .flags(CommandPoolCreateFlags::RESET_COMMAND_BUFFER)
             .build();
         let pool = unsafe { device.create_command_pool(&create_info, None) }.unwrap();
         Self(pool)
@@ -116,6 +118,15 @@ impl<'a> CommandRecorder<'a> {
                 first_vertex,
                 first_instance,
             );
+        }
+    }
+
+    #[inline]
+    pub fn reset(&self) {
+        unsafe {
+            self.device
+                .device
+                .reset_command_buffer(self.buffer, CommandBufferResetFlags::empty());
         }
     }
 }

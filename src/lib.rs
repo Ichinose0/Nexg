@@ -11,6 +11,7 @@ use ash::vk::{
 mod device;
 mod frame_buffer;
 mod image;
+mod fence;
 mod instance;
 mod mem;
 mod pipeline;
@@ -23,6 +24,7 @@ mod surface;
 #[cfg(feature = "window")]
 mod swapchain;
 
+pub use fence::*;
 pub use device::*;
 pub use frame_buffer::*;
 pub use image::*;

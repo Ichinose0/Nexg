@@ -55,8 +55,8 @@ impl ImageDescriptor {
 
 pub struct Image<'a> {
     image: ash::vk::Image,
-    memory: DeviceMemory,
-    size: u64,
+    memory: Option<DeviceMemory>,
+    size: Option<u64>,
     device: &'a Device,
 }
 
@@ -86,22 +86,34 @@ impl<'a> Image<'a> {
         Self {
             image,
             device,
-            size: mem_req.size,
-            memory,
+            size: Some(mem_req.size),
+            memory: Some(memory),
         }
     }
 
     pub fn map_memory(&self) -> *mut c_void {
         unsafe {
-            self.device
-                .device
-                .map_memory(self.memory.memory, 0, self.size, MemoryMapFlags::empty())
+            self.device.device.map_memory(
+                self.memory.as_ref().unwrap().memory,
+                0,
+                self.size.unwrap(),
+                MemoryMapFlags::empty(),
+            )
         }
         .unwrap()
     }
 
     pub fn create_image_view(&self) -> ImageView {
         ImageView::new(&self.device, &self)
+    }
+
+    pub(crate) fn from_raw(image: ash::vk::Image, device: &'a Device) -> Self {
+        Self {
+            image,
+            device,
+            memory: None,
+            size: None,
+        }
     }
 }
 

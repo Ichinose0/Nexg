@@ -1,17 +1,18 @@
-use ash::vk::{ImageUsageFlags, SharingMode, SwapchainCreateInfoKHR, SwapchainKHR};
+use ash::vk::{ImageUsageFlags, Semaphore, SharingMode, SwapchainCreateInfoKHR, SwapchainKHR};
 
-use crate::{Device, DeviceConnecter, Instance, Surface};
+use crate::{Device, DeviceConnecter, Fence, Image, Instance, Surface};
 
-pub struct Swapchain {
+pub struct Swapchain<'a> {
     swapchain: ash::extensions::khr::Swapchain,
     khr: SwapchainKHR,
+    device: &'a Device,
 }
 
-impl Swapchain {
+impl<'a> Swapchain<'a> {
     pub fn new(
         surface: &Surface,
         instance: &Instance,
-        device: &Device,
+        device: &'a Device,
         connecter: DeviceConnecter,
     ) -> Self {
         if !connecter.is_support_swapchain() {
@@ -41,6 +42,23 @@ impl Swapchain {
         let swapchain = ash::extensions::khr::Swapchain::new(&instance.instance, &device.device);
         let khr = unsafe { swapchain.create_swapchain(&create_info, None) }.unwrap();
 
-        Self { swapchain, khr }
+        Self {
+            swapchain,
+            khr,
+            device,
+        }
+    }
+
+    pub fn acquire_next_image(&self,fence: &Fence) -> usize {
+        let next = unsafe { self.swapchain.acquire_next_image(self.khr, 1000000000, Semaphore::null(), fence.fence) }.unwrap();
+        next.0 as usize
+    }
+
+    pub fn images(&self) -> Vec<Image> {
+        let images = unsafe { self.swapchain.get_swapchain_images(self.khr).unwrap() };
+        images
+            .iter()
+            .map(|x| Image::from_raw(*x, self.device))
+            .collect::<Vec<Image>>()
     }
 }
