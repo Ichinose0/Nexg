@@ -14,6 +14,7 @@ mod instance;
 mod mem;
 mod pipeline;
 mod queue;
+mod frame_buffer;
 mod recorder;
 mod renderpass;
 mod shader;
@@ -22,6 +23,7 @@ mod surface;
 #[cfg(feature = "window")]
 mod swapchain;
 
+pub use frame_buffer::*;
 pub use device::*;
 pub use image::*;
 pub use instance::*;

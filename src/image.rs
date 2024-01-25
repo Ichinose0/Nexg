@@ -1,7 +1,6 @@
 use crate::{Device, DeviceConnecter, DeviceMemory, Extent3d};
 use ash::vk::{
-    Format, ImageCreateInfo, ImageLayout, ImageTiling, ImageUsageFlags, SampleCountFlags,
-    SharingMode,
+    ComponentMapping, ComponentSwizzle, Format, ImageAspectFlags, ImageCreateInfo, ImageLayout, ImageSubresourceRange, ImageTiling, ImageUsageFlags, ImageViewCreateInfo, ImageViewType, SampleCountFlags, SharingMode
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -82,6 +81,24 @@ impl<'a> Image<'a> {
             image,
             device,
             memory,
+        }
+    }
+
+    pub fn create_image_view(&self) -> ImageView {
+        ImageView::new(&self.device, &self)
+    }
+}
+
+pub struct ImageView {
+    pub(crate) image_view: ash::vk::ImageView
+}
+
+impl ImageView {
+    pub(crate) fn new(device: &Device,image: &Image) -> Self {
+        let create_info = ImageViewCreateInfo::builder().image(image.image).view_type(ImageViewType::TYPE_2D).format(Format::R8G8B8A8_UNORM).components(ComponentMapping::builder().r(ComponentSwizzle::IDENTITY).g(ComponentSwizzle::IDENTITY).b(ComponentSwizzle::IDENTITY).a(ComponentSwizzle::IDENTITY).build()).subresource_range(ImageSubresourceRange::builder().aspect_mask(ImageAspectFlags::COLOR).base_mip_level(0).level_count(1).base_array_layer(0).layer_count(1).build()).build();
+        let image_view = unsafe { device.device.create_image_view(&create_info, None) }.unwrap();
+        Self {
+            image_view
         }
     }
 }

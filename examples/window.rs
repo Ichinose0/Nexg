@@ -1,8 +1,5 @@
 use fgl::{
-    CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Image, ImageDescriptor,
-    InstanceBuilder, InstanceFeature, Pipeline, PipelineDescriptor, PipelineLayout,
-    PipelineLayoutDescriptor, RenderPass, RenderPassDescriptor, Shader, ShaderKind, Spirv, SubPass,
-    SubPassDescriptor, Surface, Swapchain,
+    CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, InstanceBuilder, InstanceFeature, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, RenderPass, RenderPassDescriptor, Shader, ShaderKind, Spirv, SubPass, SubPassDescriptor, Surface, Swapchain
 };
 use simple_logger::SimpleLogger;
 use winit::{
@@ -60,7 +57,8 @@ fn main() {
     let recorders = device.allocate_command_recorder(pool, &desc);
     let desc = ImageDescriptor::new().extent(Extent3d::new(size.width,size.height, 1));
     let image = Image::create(&device, connecter, &desc);
-
+    let image_view = image.create_image_view();
+    
     let vertex = Shader::new(
         &device,
         Spirv::new(concat!(
@@ -88,6 +86,9 @@ fn main() {
     let pipeline_layout = PipelineLayout::new(&device, &desc);
     let desc = PipelineDescriptor::empty().shaders(shaders).width(size.width).height(size.height);
     let pipeline = Pipeline::new(&device, pipeline_layout, &render_pass, &desc);
+
+    let desc = FrameBufferDescriptor::empty().render_pass(&render_pass).image_view(&image_view).width(size.width).height(size.height);
+    let framebuffer = FrameBuffer::new(&device, &desc);
 
     recorders[0].begin();
     recorders[0].end();
