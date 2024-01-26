@@ -7,6 +7,7 @@ pub(crate) enum DeviceFeature {
     Swapchain,
 }
 
+#[derive(Clone)]
 pub struct Device {
     pub(crate) device: ash::Device,
 }
@@ -18,10 +19,7 @@ impl Device {
 
     /// Get the queue corresponding to queue_family_index.
     pub fn get_queue(&self, queue_family_index: usize) -> Queue {
-        Queue(
-            unsafe { self.device.get_device_queue(queue_family_index as u32, 0) },
-            &self,
-        )
+        Queue(unsafe { self.device.get_device_queue(queue_family_index as u32, 0) })
     }
 
     /// Create a command pool.

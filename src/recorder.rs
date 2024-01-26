@@ -1,9 +1,5 @@
 use crate::{Device, Pipeline, RenderPass, RenderPassBeginDescriptor};
-use ash::vk::{
-    ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo,
-    CommandBufferLevel, CommandBufferResetFlags, CommandPoolCreateFlags, CommandPoolCreateInfo,
-    PipelineBindPoint, SubpassContents,
-};
+use ash::vk::{ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferLevel, CommandBufferResetFlags, CommandPoolCreateFlags, CommandPoolCreateInfo, Extent2D, Offset2D, PipelineBindPoint, Rect2D, RenderPassBeginInfo, SubpassContents};
 
 pub struct CommandPoolDescriptor {
     queue_family_index: Option<usize>,
@@ -47,15 +43,14 @@ impl CommandRecorderDescriptor {
     }
 }
 
-pub struct CommandRecorder<'a> {
+pub struct CommandRecorder {
     pub(crate) buffer: CommandBuffer,
-    device: &'a Device,
 }
 
-impl<'a> CommandRecorder<'a> {
+impl CommandRecorder {
     #[doc(hidden)]
     pub(crate) fn create(
-        device: &'a Device,
+        device: &Device,
         pool: CommandPool,
         descriptor: &CommandRecorderDescriptor,
     ) -> Vec<Self> {
@@ -68,31 +63,39 @@ impl<'a> CommandRecorder<'a> {
         assert_eq!(descriptor.recorder_count, buffers.len() as u32);
         buffers
             .iter()
-            .map(|x| Self { buffer: *x, device })
+            .map(|x| Self { buffer: *x })
             .collect::<Vec<Self>>()
     }
 
     #[inline]
-    pub fn begin(&self, descriptor: RenderPassBeginDescriptor) {
+    pub fn begin(&self, device: &Device, descriptor: RenderPassBeginDescriptor) {
         let create_info = CommandBufferBeginInfo::builder().build();
+        let mut clear = ClearValue::default();
         unsafe {
-            self.device
+            clear.color.float32[0] = 0.0;
+            clear.color.float32[1] = 1.0;
+            clear.color.float32[2] = 0.0;
+            clear.color.float32[3] = 1.0;
+        }
+        let begin_info = RenderPassBeginInfo::builder().render_pass(descriptor.render_pass.unwrap().render_pass).framebuffer(descriptor.frame_buffer.unwrap().frame_buffer).render_area(Rect2D::builder().extent(Extent2D::builder().width(descriptor.width).height(descriptor.height).build()).offset(Offset2D::builder().x(0).y(0).build()).build()).clear_values(&[clear]).build();
+        unsafe {
+            device
                 .device
                 .begin_command_buffer(self.buffer, &create_info)
                 .unwrap();
-            self.device.device.cmd_begin_render_pass(
+            device.device.cmd_begin_render_pass(
                 self.buffer,
-                &descriptor.into(),
+                &begin_info,
                 SubpassContents::INLINE,
             );
         }
     }
 
     #[inline]
-    pub fn end(&self) {
+    pub fn end(&self, device: &Device) {
         unsafe {
-            self.device.device.cmd_end_render_pass(self.buffer);
-            self.device.device.end_command_buffer(self.buffer).unwrap();
+            device.device.cmd_end_render_pass(self.buffer);
+            device.device.end_command_buffer(self.buffer).unwrap();
         }
     }
 
@@ -100,18 +103,19 @@ impl<'a> CommandRecorder<'a> {
     pub fn draw(
         &self,
         pipeline: &Pipeline,
+        device: &Device,
         vertex_count: u32,
         instance_count: u32,
         first_vertex: u32,
         first_instance: u32,
     ) {
         unsafe {
-            self.device.device.cmd_bind_pipeline(
+            device.device.cmd_bind_pipeline(
                 self.buffer,
                 PipelineBindPoint::GRAPHICS,
                 pipeline.pipeline,
             );
-            self.device.device.cmd_draw(
+            device.device.cmd_draw(
                 self.buffer,
                 vertex_count,
                 instance_count,
@@ -122,9 +126,9 @@ impl<'a> CommandRecorder<'a> {
     }
 
     #[inline]
-    pub fn reset(&self) {
+    pub fn reset(&self, device: &Device) {
         unsafe {
-            self.device
+            device
                 .device
                 .reset_command_buffer(self.buffer, CommandBufferResetFlags::empty());
         }

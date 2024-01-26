@@ -8,12 +8,12 @@ use crate::{BindPoint, Device, DeviceConnecter, FrameBuffer};
 
 #[derive(Clone, Copy)]
 pub struct RenderPassBeginDescriptor<'a> {
-    frame_buffer: Option<&'a FrameBuffer>,
-    render_pass: Option<&'a RenderPass>,
-    width: u32,
-    height: u32,
-    x: u32,
-    y: u32,
+    pub(crate) frame_buffer: Option<&'a FrameBuffer>,
+    pub(crate) render_pass: Option<&'a RenderPass>,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
+    pub(crate) x: u32,
+    pub(crate) y: u32,
 }
 
 impl<'a> RenderPassBeginDescriptor<'a> {

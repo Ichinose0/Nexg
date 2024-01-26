@@ -1,18 +1,17 @@
-use ash::vk::{ImageUsageFlags, Semaphore, SharingMode, SwapchainCreateInfoKHR, SwapchainKHR};
+use ash::vk::{ImageUsageFlags, PresentInfoKHR, Semaphore, SharingMode, SwapchainCreateInfoKHR, SwapchainKHR};
 
-use crate::{Device, DeviceConnecter, Fence, Image, Instance, Surface};
+use crate::{Device, DeviceConnecter, Fence, Image, Instance, Queue, Surface};
 
-pub struct Swapchain<'a> {
+pub struct Swapchain {
     swapchain: ash::extensions::khr::Swapchain,
     khr: SwapchainKHR,
-    device: &'a Device,
 }
 
-impl<'a> Swapchain<'a> {
+impl Swapchain {
     pub fn new(
         surface: &Surface,
         instance: &Instance,
-        device: &'a Device,
+        device: &Device,
         connecter: DeviceConnecter,
     ) -> Self {
         if !connecter.is_support_swapchain() {
@@ -42,23 +41,30 @@ impl<'a> Swapchain<'a> {
         let swapchain = ash::extensions::khr::Swapchain::new(&instance.instance, &device.device);
         let khr = unsafe { swapchain.create_swapchain(&create_info, None) }.unwrap();
 
-        Self {
-            swapchain,
-            khr,
-            device,
-        }
+        Self { swapchain, khr }
     }
 
-    pub fn acquire_next_image(&self,fence: &Fence) -> usize {
-        let next = unsafe { self.swapchain.acquire_next_image(self.khr, 1000000000, Semaphore::null(), fence.fence) }.unwrap();
+    pub fn acquire_next_image(&self, fence: &Fence) -> usize {
+        let next = unsafe {
+            self.swapchain
+                .acquire_next_image(self.khr, 1000000000, Semaphore::null(), fence.fence)
+        }
+        .unwrap();
         next.0 as usize
+    }
+
+    pub fn present(&self,queue: &Queue,image: u32) {
+        let present_info = PresentInfoKHR::builder().swapchains(&[self.khr]).image_indices(&[image]).build();
+        unsafe {
+            self.swapchain.queue_present(queue.0,&present_info);
+        }
     }
 
     pub fn images(&self) -> Vec<Image> {
         let images = unsafe { self.swapchain.get_swapchain_images(self.khr).unwrap() };
         images
             .iter()
-            .map(|x| Image::from_raw(*x, self.device))
+            .map(|x| Image::from_raw(*x))
             .collect::<Vec<Image>>()
     }
 }

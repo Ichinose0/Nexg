@@ -44,7 +44,7 @@ fn main() {
     let recorders = device.allocate_command_recorder(pool, &desc);
     let desc = ImageDescriptor::new().extent(Extent3d::new(WIDTH, HEIGHT, 1));
     let image = Image::create(&device, connecter, &desc);
-    let image_view = image.create_image_view();
+    let image_view = image.create_image_view(&device);
 
     let vertex = Shader::new(
         &device,
@@ -92,11 +92,11 @@ fn main() {
         .height(HEIGHT)
         .render_pass(&render_pass)
         .frame_buffer(&framebuffer);
-    recorders[0].begin(begin_desc);
-    recorders[0].draw(&pipeline[0], 3, 1, 0, 0);
-    recorders[0].end();
+    recorders[0].begin(&device,begin_desc);
+    recorders[0].draw(&pipeline[0], &device,3, 1, 0, 0);
+    recorders[0].end(&device);
 
-    queue.submit(&recorders);
+    queue.submit(&device,&recorders);
 
     let file = File::create("triangle.png").unwrap();
     let w = &mut BufWriter::new(file);
@@ -125,7 +125,7 @@ fn main() {
         .unwrap();
 
     let mut writer = encoder.write_header().unwrap();
-    let data = image.map_memory();
+    let data = image.map_memory(&device);
     let slice: &[u8] =
         unsafe { std::slice::from_raw_parts(data as *const u8, (WIDTH * HEIGHT * 4) as usize) };
     writer.write_image_data(&slice).unwrap(); // Save

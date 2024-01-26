@@ -53,16 +53,15 @@ impl ImageDescriptor {
     }
 }
 
-pub struct Image<'a> {
+pub struct Image {
     image: ash::vk::Image,
     memory: Option<DeviceMemory>,
     size: Option<u64>,
-    device: &'a Device,
 }
 
-impl<'a> Image<'a> {
+impl Image {
     pub fn create(
-        device: &'a Device,
+        device: &Device,
         connecter: DeviceConnecter,
         descriptor: &ImageDescriptor,
     ) -> Self {
@@ -85,15 +84,14 @@ impl<'a> Image<'a> {
         let memory = DeviceMemory::alloc_image_memory(&device.device, image, mem_props, mem_req);
         Self {
             image,
-            device,
             size: Some(mem_req.size),
             memory: Some(memory),
         }
     }
 
-    pub fn map_memory(&self) -> *mut c_void {
+    pub fn map_memory(&self, device: &Device) -> *mut c_void {
         unsafe {
-            self.device.device.map_memory(
+            device.device.map_memory(
                 self.memory.as_ref().unwrap().memory,
                 0,
                 self.size.unwrap(),
@@ -103,14 +101,13 @@ impl<'a> Image<'a> {
         .unwrap()
     }
 
-    pub fn create_image_view(&self) -> ImageView {
-        ImageView::new(&self.device, &self)
+    pub fn create_image_view(&self, device: &Device) -> ImageView {
+        ImageView::new(device, &self)
     }
 
-    pub(crate) fn from_raw(image: ash::vk::Image, device: &'a Device) -> Self {
+    pub(crate) fn from_raw(image: ash::vk::Image) -> Self {
         Self {
             image,
-            device,
             memory: None,
             size: None,
         }
