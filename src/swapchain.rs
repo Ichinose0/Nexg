@@ -1,10 +1,13 @@
-use ash::vk::{ImageUsageFlags, PresentInfoKHR, Semaphore, SharingMode, SwapchainCreateInfoKHR, SwapchainKHR};
+use ash::vk::{
+    ImageUsageFlags, PresentInfoKHR, Semaphore, SharingMode, SwapchainCreateInfoKHR, SwapchainKHR,
+};
 
-use crate::{Device, DeviceConnecter, Fence, Image, Instance, Queue, Surface};
+use crate::{Device, DeviceConnecter, Fence, Image, ImageFormat, Instance, Queue, Surface};
 
 pub struct Swapchain {
     swapchain: ash::extensions::khr::Swapchain,
     khr: SwapchainKHR,
+    format: ImageFormat,
 }
 
 impl Swapchain {
@@ -40,8 +43,8 @@ impl Swapchain {
             .build();
         let swapchain = ash::extensions::khr::Swapchain::new(&instance.instance, &device.device);
         let khr = unsafe { swapchain.create_swapchain(&create_info, None) }.unwrap();
-
-        Self { swapchain, khr }
+        let format = format.format.into();
+        Self { swapchain, khr, format }
     }
 
     pub fn acquire_next_image(&self, fence: &Fence) -> usize {
@@ -53,10 +56,17 @@ impl Swapchain {
         next.0 as usize
     }
 
-    pub fn present(&self,queue: &Queue,image: u32) {
-        let present_info = PresentInfoKHR::builder().swapchains(&[self.khr]).image_indices(&[image]).build();
+    pub fn format(&self) -> ImageFormat {
+        self.format
+    }
+
+    pub fn present(&self, queue: &Queue, image: u32) {
+        let present_info = PresentInfoKHR::builder()
+            .swapchains(&[self.khr])
+            .image_indices(&[image])
+            .build();
         unsafe {
-            self.swapchain.queue_present(queue.0,&present_info);
+            self.swapchain.queue_present(queue.0, &present_info);
         }
     }
 

@@ -1,10 +1,4 @@
-use fgl::{
-    CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Fence, FrameBuffer,
-    FrameBufferDescriptor, Image, ImageDescriptor, InstanceBuilder, InstanceFeature, Pipeline,
-    PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, RenderPass,
-    RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, Spirv, SubPass,
-    SubPassDescriptor, Surface, Swapchain,
-};
+use fgl::{CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Fence, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageViewDescriptor, InstanceBuilder, InstanceFeature, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, Spirv, SubPass, SubPassDescriptor, Surface, Swapchain};
 use simple_logger::SimpleLogger;
 use winit::{
     event::{Event, WindowEvent},
@@ -53,10 +47,8 @@ fn main() {
 
     let surface = Surface::new(&instance, &window);
     let swapchain = Swapchain::new(&surface, &instance, &device, connecter);
-    println!("Create swapchain");
 
     let queue = device.get_queue(index);
-    println!("create queue");
     let desc = CommandPoolDescriptor::new().queue_family_index(index);
     let pool = device.create_command_pool(&desc);
     let desc = CommandRecorderDescriptor::new();
@@ -64,8 +56,9 @@ fn main() {
     let desc = ImageDescriptor::new().extent(Extent3d::new(size.width, size.height, 1));
     let images = swapchain.images();
     let mut swapchain_images = vec![];
+    let desc = ImageViewDescriptor::empty().format(swapchain.format());
     for i in images {
-        swapchain_images.push(i.create_image_view(&device));
+        swapchain_images.push(i.create_image_view(&device,&desc));
     }
 
     let vertex = Shader::new(
@@ -98,7 +91,6 @@ fn main() {
         .width(size.width)
         .height(size.height);
     let pipeline = Pipeline::new(&device, pipeline_layout, &render_pass, &desc);
-    println!("create pipeline");
 
     let mut frame_buffers = vec![];
     for i in &swapchain_images {
@@ -130,7 +122,7 @@ fn main() {
 
                 queue.submit(&device, &recorders);
 
-                swapchain.present(&queue,img as u32);
+                swapchain.present(&queue, img as u32);
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,

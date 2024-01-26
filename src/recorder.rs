@@ -1,5 +1,9 @@
 use crate::{Device, Pipeline, RenderPass, RenderPassBeginDescriptor};
-use ash::vk::{ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferLevel, CommandBufferResetFlags, CommandPoolCreateFlags, CommandPoolCreateInfo, Extent2D, Offset2D, PipelineBindPoint, Rect2D, RenderPassBeginInfo, SubpassContents};
+use ash::vk::{
+    ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo,
+    CommandBufferLevel, CommandBufferResetFlags, CommandPoolCreateFlags, CommandPoolCreateInfo,
+    Extent2D, Offset2D, PipelineBindPoint, Rect2D, RenderPassBeginInfo, SubpassContents,
+};
 
 pub struct CommandPoolDescriptor {
     queue_family_index: Option<usize>,
@@ -77,17 +81,30 @@ impl CommandRecorder {
             clear.color.float32[2] = 0.0;
             clear.color.float32[3] = 1.0;
         }
-        let begin_info = RenderPassBeginInfo::builder().render_pass(descriptor.render_pass.unwrap().render_pass).framebuffer(descriptor.frame_buffer.unwrap().frame_buffer).render_area(Rect2D::builder().extent(Extent2D::builder().width(descriptor.width).height(descriptor.height).build()).offset(Offset2D::builder().x(0).y(0).build()).build()).clear_values(&[clear]).build();
+        let begin_info = RenderPassBeginInfo::builder()
+            .render_pass(descriptor.render_pass.unwrap().render_pass)
+            .framebuffer(descriptor.frame_buffer.unwrap().frame_buffer)
+            .render_area(
+                Rect2D::builder()
+                    .extent(
+                        Extent2D::builder()
+                            .width(descriptor.width)
+                            .height(descriptor.height)
+                            .build(),
+                    )
+                    .offset(Offset2D::builder().x(0).y(0).build())
+                    .build(),
+            )
+            .clear_values(&[clear])
+            .build();
         unsafe {
             device
                 .device
                 .begin_command_buffer(self.buffer, &create_info)
                 .unwrap();
-            device.device.cmd_begin_render_pass(
-                self.buffer,
-                &begin_info,
-                SubpassContents::INLINE,
-            );
+            device
+                .device
+                .cmd_begin_render_pass(self.buffer, &begin_info, SubpassContents::INLINE);
         }
     }
 

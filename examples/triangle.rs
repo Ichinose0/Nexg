@@ -92,11 +92,11 @@ fn main() {
         .height(HEIGHT)
         .render_pass(&render_pass)
         .frame_buffer(&framebuffer);
-    recorders[0].begin(&device,begin_desc);
-    recorders[0].draw(&pipeline[0], &device,3, 1, 0, 0);
+    recorders[0].begin(&device, begin_desc);
+    recorders[0].draw(&pipeline[0], &device, 3, 1, 0, 0);
     recorders[0].end(&device);
 
-    queue.submit(&device,&recorders);
+    queue.submit(&device, &recorders);
 
     let file = File::create("triangle.png").unwrap();
     let w = &mut BufWriter::new(file);

@@ -7,6 +7,77 @@ use ash::vk::{
     MemoryMapFlags, MemoryPropertyFlags, SampleCountFlags, SharingMode,
 };
 
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub enum ImageFormat {
+    R8G8B8A8Unorm,
+    R8G8B8A8Srgb,
+    R8G8B8A8Sscaled,
+    R8G8B8A8Sint,
+    R8G8B8A8Snorm,
+    R8G8B8A8Uint,
+    B8G8R8Sscaled,
+    B8G8R8Srgb,
+    B8G8R8Snorm,
+    B8G8R8Sint,
+    A1R5G5B5UnormPack16,
+    A2B10G10R10SintPack32,
+    A2B10G10R10SnormPack32,
+    A2B10G10R10SscaledPack32,
+    A2B10G10R10UintPack32,
+    Undefined,
+    B8G8R8A8Unorm,
+}
+
+impl Into<ImageFormat> for Format {
+    fn into(self) -> ImageFormat {
+        match self {
+            Format::R8G8B8A8_UNORM => ImageFormat::R8G8B8A8Unorm,
+            Format::B8G8R8A8_UNORM => ImageFormat::B8G8R8A8Unorm,
+            Format::A1R5G5B5_UNORM_PACK16 => ImageFormat::A1R5G5B5UnormPack16,
+            Format::A2B10G10R10_SINT_PACK32 => ImageFormat::A2B10G10R10SintPack32,
+            Format::A2B10G10R10_SNORM_PACK32 => ImageFormat::A2B10G10R10SnormPack32,
+            Format::A2B10G10R10_SSCALED_PACK32 => ImageFormat::A2B10G10R10SscaledPack32,
+            Format::A2B10G10R10_UINT_PACK32 => ImageFormat::A2B10G10R10UintPack32,
+            Format::B8G8R8_SINT => ImageFormat::B8G8R8Sint,
+            Format::B8G8R8_SNORM => ImageFormat::B8G8R8Snorm,
+            Format::B8G8R8_SRGB => ImageFormat::B8G8R8Srgb,
+            Format::B8G8R8_SSCALED => ImageFormat::B8G8R8Sscaled,
+            Format::R8G8B8A8_SINT => ImageFormat::R8G8B8A8Sint,
+            Format::R8G8B8A8_SRGB => ImageFormat::R8G8B8A8Srgb,
+            Format::R8G8B8A8_SSCALED => ImageFormat::R8G8B8A8Sscaled,
+            Format::R8G8B8A8_SNORM => ImageFormat::R8G8B8A8Snorm,
+            Format::R8G8B8A8_UINT => ImageFormat::R8G8B8A8Uint,
+
+            _ => ImageFormat::Undefined,
+        }
+    }
+}
+
+impl Into<Format> for ImageFormat {
+    fn into(self) -> Format {
+        match self {
+            ImageFormat::R8G8B8A8Unorm => Format::R8G8B8A8_UNORM,
+            ImageFormat::R8G8B8A8Srgb => Format::R8G8B8A8_SRGB,
+            ImageFormat::R8G8B8A8Sscaled => Format::R8G8B8A8_SSCALED,
+            ImageFormat::R8G8B8A8Sint => Format::R8G8B8A8_SINT,
+            ImageFormat::R8G8B8A8Snorm => Format::R8G8B8A8_SNORM,
+            ImageFormat::R8G8B8A8Uint => Format::R8G8B8A8_UINT,
+            ImageFormat::B8G8R8A8Unorm => Format::B8G8R8A8_UNORM,
+            ImageFormat::B8G8R8Sscaled => Format::B8G8R8_SSCALED,
+            ImageFormat::B8G8R8Srgb => Format::B8G8R8_SRGB,
+            ImageFormat::B8G8R8Snorm => Format::B8G8R8_SNORM,
+            ImageFormat::B8G8R8Sint => Format::B8G8R8_SINT,
+            ImageFormat::A1R5G5B5UnormPack16 => Format::A1R5G5B5_UNORM_PACK16,
+            ImageFormat::A2B10G10R10SintPack32 => Format::A2B10G10R10_SINT_PACK32,
+            ImageFormat::A2B10G10R10SnormPack32 => Format::A2B10G10R10_SNORM_PACK32,
+            ImageFormat::A2B10G10R10SscaledPack32 => Format::A2B10G10R10_SSCALED_PACK32,
+            ImageFormat::A2B10G10R10UintPack32 => Format::A2B10G10R10_UINT_PACK32,
+
+            ImageFormat::Undefined => Format::UNDEFINED
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ImageType {
     e2D,
@@ -101,8 +172,8 @@ impl Image {
         .unwrap()
     }
 
-    pub fn create_image_view(&self, device: &Device) -> ImageView {
-        ImageView::new(device, &self)
+    pub fn create_image_view(&self, device: &Device,descriptor: &ImageViewDescriptor) -> ImageView {
+        ImageView::new(device, &self,&descriptor)
     }
 
     pub(crate) fn from_raw(image: ash::vk::Image) -> Self {
@@ -114,16 +185,33 @@ impl Image {
     }
 }
 
+pub struct ImageViewDescriptor {
+    format: ImageFormat,
+}
+
+impl ImageViewDescriptor {
+    pub fn empty() -> Self {
+        Self {
+            format: ImageFormat::R8G8B8A8Unorm,
+        }
+    }
+
+    pub fn format(mut self,format: ImageFormat) -> Self {
+        self.format = format;
+        self
+    }
+}
+
 pub struct ImageView {
     pub(crate) image_view: ash::vk::ImageView,
 }
 
 impl ImageView {
-    pub(crate) fn new(device: &Device, image: &Image) -> Self {
+    pub(crate) fn new(device: &Device, image: &Image,descriptor: &ImageViewDescriptor) -> Self {
         let create_info = ImageViewCreateInfo::builder()
             .image(image.image)
             .view_type(ImageViewType::TYPE_2D)
-            .format(Format::R8G8B8A8_UNORM)
+            .format(descriptor.format.into())
             .components(
                 ComponentMapping::builder()
                     .r(ComponentSwizzle::IDENTITY)
