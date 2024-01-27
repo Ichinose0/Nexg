@@ -2,7 +2,10 @@ use ash::vk::{
     ImageUsageFlags, PresentInfoKHR, Semaphore, SharingMode, SwapchainCreateInfoKHR, SwapchainKHR,
 };
 
-use crate::{Device, DeviceConnecter, Fence, Image, ImageFormat, Instance, Queue, Surface};
+use crate::{
+    Device, DeviceConnecter, Fence, Image, ImageFormat, Instance, Queue, QueuePresentDescriptor,
+    Surface,
+};
 
 pub struct Swapchain {
     swapchain: ash::extensions::khr::Swapchain,
@@ -44,13 +47,25 @@ impl Swapchain {
         let swapchain = ash::extensions::khr::Swapchain::new(&instance.instance, &device.device);
         let khr = unsafe { swapchain.create_swapchain(&create_info, None) }.unwrap();
         let format = format.format.into();
-        Self { swapchain, khr, format }
+        Self {
+            swapchain,
+            khr,
+            format,
+        }
     }
 
-    pub fn acquire_next_image(&self, fence: &Fence) -> usize {
+    pub fn acquire_next_image(&self, semaphore: Option<&crate::Semaphore>) -> usize {
+        let semaphore = match semaphore {
+            None => Semaphore::null(),
+            Some(x) => x.semaphore,
+        };
         let next = unsafe {
-            self.swapchain
-                .acquire_next_image(self.khr, 1000000000, Semaphore::null(), fence.fence)
+            self.swapchain.acquire_next_image(
+                self.khr,
+                1000000000,
+                semaphore,
+                ash::vk::Fence::null(),
+            )
         }
         .unwrap();
         next.0 as usize
@@ -60,13 +75,21 @@ impl Swapchain {
         self.format
     }
 
-    pub fn present(&self, queue: &Queue, image: u32) {
-        let present_info = PresentInfoKHR::builder()
+    pub fn present(&self, descriptor: &QueuePresentDescriptor, image: u32) {
+        let w_semaphores: Vec<ash::vk::Semaphore> = descriptor
+            .wait_semaphores
+            .iter()
+            .map(|x| x.semaphore)
+            .collect();
+        let mut present_info = PresentInfoKHR::builder()
             .swapchains(&[self.khr])
             .image_indices(&[image])
+            .wait_semaphores(&w_semaphores)
             .build();
+
         unsafe {
-            self.swapchain.queue_present(queue.0, &present_info);
+            self.swapchain
+                .queue_present(descriptor.queue.unwrap().0, &present_info);
         }
     }
 

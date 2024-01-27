@@ -7,7 +7,7 @@ use ash::vk::{
     MemoryMapFlags, MemoryPropertyFlags, SampleCountFlags, SharingMode,
 };
 
-#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ImageFormat {
     R8G8B8A8Unorm,
     R8G8B8A8Srgb,
@@ -73,7 +73,7 @@ impl Into<Format> for ImageFormat {
             ImageFormat::A2B10G10R10SscaledPack32 => Format::A2B10G10R10_SSCALED_PACK32,
             ImageFormat::A2B10G10R10UintPack32 => Format::A2B10G10R10_UINT_PACK32,
 
-            ImageFormat::Undefined => Format::UNDEFINED
+            ImageFormat::Undefined => Format::UNDEFINED,
         }
     }
 }
@@ -172,8 +172,12 @@ impl Image {
         .unwrap()
     }
 
-    pub fn create_image_view(&self, device: &Device,descriptor: &ImageViewDescriptor) -> ImageView {
-        ImageView::new(device, &self,&descriptor)
+    pub fn create_image_view(
+        &self,
+        device: &Device,
+        descriptor: &ImageViewDescriptor,
+    ) -> ImageView {
+        ImageView::new(device, &self, &descriptor)
     }
 
     pub(crate) fn from_raw(image: ash::vk::Image) -> Self {
@@ -196,7 +200,7 @@ impl ImageViewDescriptor {
         }
     }
 
-    pub fn format(mut self,format: ImageFormat) -> Self {
+    pub fn format(mut self, format: ImageFormat) -> Self {
         self.format = format;
         self
     }
@@ -207,7 +211,7 @@ pub struct ImageView {
 }
 
 impl ImageView {
-    pub(crate) fn new(device: &Device, image: &Image,descriptor: &ImageViewDescriptor) -> Self {
+    pub(crate) fn new(device: &Device, image: &Image, descriptor: &ImageViewDescriptor) -> Self {
         let create_info = ImageViewCreateInfo::builder()
             .image(image.image)
             .view_type(ImageViewType::TYPE_2D)

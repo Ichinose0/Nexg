@@ -1,4 +1,11 @@
-use fgl::{CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Fence, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageViewDescriptor, InstanceBuilder, InstanceFeature, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, Spirv, SubPass, SubPassDescriptor, Surface, Swapchain};
+use fgl::{
+    CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Fence, FenceDescriptor,
+    FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageViewDescriptor,
+    InstanceBuilder, InstanceFeature, Pipeline, PipelineDescriptor, PipelineLayout,
+    PipelineLayoutDescriptor, QueuePresentDescriptor, QueueSubmitDescriptor, RenderPass,
+    RenderPassBeginDescriptor, RenderPassDescriptor, Semaphore, SemaphoreDescriptor, Shader,
+    ShaderKind, Spirv, SubPass, SubPassDescriptor, Surface, Swapchain,
+};
 use simple_logger::SimpleLogger;
 use winit::{
     event::{Event, WindowEvent},
@@ -58,7 +65,7 @@ fn main() {
     let mut swapchain_images = vec![];
     let desc = ImageViewDescriptor::empty().format(swapchain.format());
     for i in images {
-        swapchain_images.push(i.create_image_view(&device,&desc));
+        swapchain_images.push(i.create_image_view(&device, &desc));
     }
 
     let vertex = Shader::new(
@@ -102,14 +109,22 @@ fn main() {
         frame_buffers.push(FrameBuffer::new(&device, &desc));
     }
 
-    let fence = Fence::new(&device);
+    let desc = FenceDescriptor::empty().signaled(true);
+    let image_rendered_fence = Fence::new(&device, &desc);
+
+    let semaphore_desc = SemaphoreDescriptor::empty();
+
+    let swapchain_image_semaphore = Semaphore::new(&device, &semaphore_desc);
+    let image_rendered_semaphore = Semaphore::new(&device, &semaphore_desc);
 
     event_loop.run(move |event, _, control_flow| {
         control_flow.set_wait();
 
         match event {
             Event::RedrawRequested(id) => {
-                let img = swapchain.acquire_next_image(&fence);
+                let img = swapchain.acquire_next_image(Some(&swapchain_image_semaphore));
+                image_rendered_fence.wait(&device, u64::MAX);
+                image_rendered_fence.reset(&device);
                 let begin_desc = RenderPassBeginDescriptor::empty()
                     .width(size.width)
                     .height(size.height)
@@ -120,9 +135,21 @@ fn main() {
                 recorders[0].draw(&pipeline[0], &device, 3, 1, 0, 0);
                 recorders[0].end(&device);
 
-                queue.submit(&device, &recorders);
+                let w_semaphores = &[swapchain_image_semaphore];
+                let s_semaphores = &[image_rendered_semaphore];
+                let desc = QueueSubmitDescriptor::empty()
+                    .wait_semaphores(w_semaphores)
+                    .signal_semaphores(s_semaphores)
+                    .fence(&image_rendered_fence);
 
-                swapchain.present(&queue, img as u32);
+                queue.submit(&device, &desc, &recorders);
+
+                let w_semaphores = &[image_rendered_semaphore];
+                let desc = QueuePresentDescriptor::empty()
+                    .wait_semaphores(w_semaphores)
+                    .queue(&queue);
+
+                swapchain.present(&desc, img as u32);
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,

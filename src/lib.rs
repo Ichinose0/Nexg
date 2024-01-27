@@ -23,6 +23,7 @@ mod shader;
 mod surface;
 #[cfg(feature = "window")]
 mod swapchain;
+mod sync;
 
 pub use device::*;
 pub use fence::*;
@@ -39,6 +40,7 @@ pub use shader::*;
 pub use surface::*;
 #[cfg(feature = "window")]
 pub use swapchain::*;
+pub use sync::*;
 
 pub struct QueueFamilyProperties {
     graphic_support: bool,
