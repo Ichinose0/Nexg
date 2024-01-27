@@ -10,6 +10,7 @@ pub struct FrameBufferDescriptor<'a> {
 }
 
 impl<'a> FrameBufferDescriptor<'a> {
+    #[inline]
     pub fn empty() -> Self {
         Self {
             width: 100,
@@ -19,21 +20,25 @@ impl<'a> FrameBufferDescriptor<'a> {
         }
     }
 
+    #[inline]
     pub fn width(mut self, width: u32) -> Self {
         self.width = width;
         self
     }
 
+    #[inline]
     pub fn height(mut self, height: u32) -> Self {
         self.height = height;
         self
     }
 
+    #[inline]
     pub fn image_view(mut self, image_view: &'a ImageView) -> Self {
         self.image_view = Some(image_view);
         self
     }
 
+    #[inline]
     pub fn render_pass(mut self, render_pass: &'a RenderPass) -> Self {
         self.render_pass = Some(render_pass);
         self
@@ -45,6 +50,7 @@ pub struct FrameBuffer {
 }
 
 impl FrameBuffer {
+    #[inline]
     pub fn new(device: &Device, descriptor: &FrameBufferDescriptor) -> Self {
         let render_pass = descriptor.render_pass.unwrap();
         let image_view = descriptor.image_view.unwrap();

@@ -98,6 +98,7 @@ pub struct ImageDescriptor {
     extent: Extent3d,
     mip_levels: u32,
     array_layers: u32,
+    format: ImageFormat,
 }
 
 impl ImageDescriptor {
@@ -108,6 +109,7 @@ impl ImageDescriptor {
             extent: Extent3d::new(100, 100, 1),
             mip_levels: 1,
             array_layers: 1,
+            format: ImageFormat::R8G8B8A8Unorm,
         }
     }
 
@@ -120,6 +122,12 @@ impl ImageDescriptor {
     #[inline]
     pub fn extent(mut self, extent: Extent3d) -> Self {
         self.extent = extent;
+        self
+    }
+
+    #[inline]
+    pub fn format(mut self, format: ImageFormat) -> Self {
+        self.format = format;
         self
     }
 }
@@ -194,12 +202,14 @@ pub struct ImageViewDescriptor {
 }
 
 impl ImageViewDescriptor {
+    #[inline]
     pub fn empty() -> Self {
         Self {
             format: ImageFormat::R8G8B8A8Unorm,
         }
     }
 
+    #[inline]
     pub fn format(mut self, format: ImageFormat) -> Self {
         self.format = format;
         self
@@ -211,6 +221,7 @@ pub struct ImageView {
 }
 
 impl ImageView {
+    #[inline]
     pub(crate) fn new(device: &Device, image: &Image, descriptor: &ImageViewDescriptor) -> Self {
         let create_info = ImageViewCreateInfo::builder()
             .image(image.image)

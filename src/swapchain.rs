@@ -7,6 +7,13 @@ use crate::{
     Surface,
 };
 
+#[derive(Clone, Copy, Debug)]
+pub enum SwapchainState {
+    Normal,
+    SubOptimal,
+    Broken,
+}
+
 pub struct Swapchain {
     swapchain: ash::extensions::khr::Swapchain,
     khr: SwapchainKHR,
@@ -54,21 +61,34 @@ impl Swapchain {
         }
     }
 
-    pub fn acquire_next_image(&self, semaphore: Option<&crate::Semaphore>) -> usize {
+    pub fn acquire_next_image(
+        &self,
+        semaphore: Option<&crate::Semaphore>,
+    ) -> (usize, SwapchainState) {
         let semaphore = match semaphore {
             None => Semaphore::null(),
             Some(x) => x.semaphore,
         };
-        let next = unsafe {
+        match unsafe {
             self.swapchain.acquire_next_image(
                 self.khr,
                 1000000000,
                 semaphore,
                 ash::vk::Fence::null(),
             )
+        } {
+            Ok(result) => {
+                let image = result.0 as usize;
+                let state = if result.1 {
+                    SwapchainState::Broken
+                } else {
+                    SwapchainState::Normal
+                };
+                (image, state)
+            }
+
+            Err(e) => panic!("Can't get next image"),
         }
-        .unwrap();
-        next.0 as usize
     }
 
     pub fn format(&self) -> ImageFormat {

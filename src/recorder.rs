@@ -10,12 +10,14 @@ pub struct CommandPoolDescriptor {
 }
 
 impl CommandPoolDescriptor {
-    pub fn new() -> Self {
+    #[inline]
+    pub fn empty() -> Self {
         Self {
             queue_family_index: None,
         }
     }
 
+    #[inline]
     pub fn queue_family_index(mut self, queue_family_index: usize) -> Self {
         self.queue_family_index = Some(queue_family_index);
         self
@@ -42,7 +44,8 @@ pub struct CommandRecorderDescriptor {
 }
 
 impl CommandRecorderDescriptor {
-    pub fn new() -> Self {
+    #[inline]
+    pub fn empty() -> Self {
         Self { recorder_count: 1 }
     }
 }
@@ -76,10 +79,10 @@ impl CommandRecorder {
         let create_info = CommandBufferBeginInfo::builder().build();
         let mut clear = ClearValue::default();
         unsafe {
-            clear.color.float32[0] = 0.0;
-            clear.color.float32[1] = 1.0;
-            clear.color.float32[2] = 0.0;
-            clear.color.float32[3] = 1.0;
+            clear.color.float32[0] = descriptor.r;
+            clear.color.float32[1] = descriptor.g;
+            clear.color.float32[2] = descriptor.b;
+            clear.color.float32[3] = descriptor.a;
         }
         let begin_info = RenderPassBeginInfo::builder()
             .render_pass(descriptor.render_pass.unwrap().render_pass)

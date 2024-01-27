@@ -4,6 +4,7 @@ use ash::vk::SemaphoreCreateInfo;
 pub struct SemaphoreDescriptor {}
 
 impl SemaphoreDescriptor {
+    #[inline]
     pub fn empty() -> Self {
         Self {}
     }

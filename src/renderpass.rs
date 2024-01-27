@@ -14,6 +14,10 @@ pub struct RenderPassBeginDescriptor<'a> {
     pub(crate) height: u32,
     pub(crate) x: u32,
     pub(crate) y: u32,
+    pub(crate) r: f32,
+    pub(crate) g: f32,
+    pub(crate) b: f32,
+    pub(crate) a: f32,
 }
 
 impl<'a> RenderPassBeginDescriptor<'a> {
@@ -25,6 +29,10 @@ impl<'a> RenderPassBeginDescriptor<'a> {
             height: 100,
             x: 0,
             y: 0,
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+            a: 1.0,
         }
     }
 
@@ -38,6 +46,14 @@ impl<'a> RenderPassBeginDescriptor<'a> {
         self
     }
 
+    pub fn clear(mut self, r: f32, g: f32, b: f32, a: f32) -> Self {
+        self.r = r;
+        self.g = g;
+        self.b = b;
+        self.a = a;
+        self
+    }
+
     pub fn frame_buffer(mut self, frame_buffer: &'a FrameBuffer) -> Self {
         self.frame_buffer = Some(frame_buffer);
         self
@@ -46,39 +62,6 @@ impl<'a> RenderPassBeginDescriptor<'a> {
     pub fn render_pass(mut self, render_pass: &'a RenderPass) -> Self {
         self.render_pass = Some(render_pass);
         self
-    }
-}
-
-impl Into<ash::vk::RenderPassBeginInfo> for RenderPassBeginDescriptor<'_> {
-    fn into(self) -> ash::vk::RenderPassBeginInfo {
-        let mut clear = ClearValue::default();
-        unsafe {
-            clear.color.float32[0] = 0.0;
-            clear.color.float32[1] = 1.0;
-            clear.color.float32[2] = 0.0;
-            clear.color.float32[3] = 1.0;
-        }
-        RenderPassBeginInfo::builder()
-            .render_pass(self.render_pass.unwrap().render_pass)
-            .framebuffer(self.frame_buffer.unwrap().frame_buffer)
-            .render_area(
-                Rect2D::builder()
-                    .extent(
-                        Extent2D::builder()
-                            .width(self.width)
-                            .height(self.height)
-                            .build(),
-                    )
-                    .offset(
-                        Offset2D::builder()
-                            .x(self.x as i32)
-                            .y(self.y as i32)
-                            .build(),
-                    )
-                    .build(),
-            )
-            .clear_values(&[clear])
-            .build()
     }
 }
 
@@ -153,6 +136,7 @@ pub struct RenderPassDescriptor<'a> {
 }
 
 impl<'a> RenderPassDescriptor<'a> {
+    #[inline]
     pub fn empty() -> Self {
         Self {
             load_op: LoadOp::DontCare,
@@ -161,16 +145,19 @@ impl<'a> RenderPassDescriptor<'a> {
         }
     }
 
+    #[inline]
     pub fn load_op(mut self, load_op: LoadOp) -> Self {
         self.load_op = load_op;
         self
     }
 
+    #[inline]
     pub fn store_op(mut self, store_op: StoreOp) -> Self {
         self.store_op = store_op;
         self
     }
 
+    #[inline]
     pub fn subpasses(mut self, subpasses: &'a [SubPass]) -> Self {
         self.subpasses = subpasses;
         self
@@ -182,6 +169,7 @@ pub struct RenderPass {
 }
 
 impl RenderPass {
+    #[inline]
     pub fn new(device: &Device, descriptor: &RenderPassDescriptor) -> Self {
         let subpasses = descriptor
             .subpasses

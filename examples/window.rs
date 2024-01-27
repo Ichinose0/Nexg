@@ -56,11 +56,10 @@ fn main() {
     let swapchain = Swapchain::new(&surface, &instance, &device, connecter);
 
     let queue = device.get_queue(index);
-    let desc = CommandPoolDescriptor::new().queue_family_index(index);
+    let desc = CommandPoolDescriptor::empty().queue_family_index(index);
     let pool = device.create_command_pool(&desc);
-    let desc = CommandRecorderDescriptor::new();
+    let desc = CommandRecorderDescriptor::empty();
     let recorders = device.allocate_command_recorder(pool, &desc);
-    let desc = ImageDescriptor::new().extent(Extent3d::new(size.width, size.height, 1));
     let images = swapchain.images();
     let mut swapchain_images = vec![];
     let desc = ImageViewDescriptor::empty().format(swapchain.format());
@@ -122,12 +121,14 @@ fn main() {
 
         match event {
             Event::RedrawRequested(id) => {
-                let img = swapchain.acquire_next_image(Some(&swapchain_image_semaphore));
+                let (img, state) = swapchain.acquire_next_image(Some(&swapchain_image_semaphore));
+                println!("{:?}", state);
                 image_rendered_fence.wait(&device, u64::MAX);
                 image_rendered_fence.reset(&device);
                 let begin_desc = RenderPassBeginDescriptor::empty()
                     .width(size.width)
                     .height(size.height)
+                    .clear(0.95, 0.95, 0.95, 1.0)
                     .render_pass(&render_pass)
                     .frame_buffer(&frame_buffers[img]);
                 recorders[0].reset(&device);
@@ -155,10 +156,12 @@ fn main() {
                 event: WindowEvent::CloseRequested,
                 window_id,
             } if window_id == window.id() => control_flow.set_exit(),
-            Event::MainEventsCleared => {
+            Event::WindowEvent {
+                event: WindowEvent::CursorMoved { .. },
+                window_id,
+            } if window_id == window.id() => {
                 window.request_redraw();
             }
-
             _ => (),
         }
     });
