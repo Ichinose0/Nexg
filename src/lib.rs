@@ -182,7 +182,7 @@ pub struct Extent3d {
 }
 
 impl Extent3d {
-    pub fn new(width: u32, height: u32, depth: u32) -> Self {
+    pub const fn new(width: u32, height: u32, depth: u32) -> Self {
         Self {
             width,
             height,

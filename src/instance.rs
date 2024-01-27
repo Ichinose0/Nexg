@@ -16,7 +16,7 @@ pub struct InstanceFeature {
 impl InstanceFeature {
     /// Empty InstanceFeature, no additional functionality.
     #[inline]
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         Self {
             extensions: vec![],
             device_exts: vec![],

@@ -103,7 +103,7 @@ pub struct ImageDescriptor {
 
 impl ImageDescriptor {
     #[inline]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             image_type: ImageType::e2D,
             extent: Extent3d::new(100, 100, 1),
@@ -203,14 +203,14 @@ pub struct ImageViewDescriptor {
 
 impl ImageViewDescriptor {
     #[inline]
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         Self {
             format: ImageFormat::R8G8B8A8Unorm,
         }
     }
 
     #[inline]
-    pub fn format(mut self, format: ImageFormat) -> Self {
+    pub const fn format(mut self, format: ImageFormat) -> Self {
         self.format = format;
         self
     }

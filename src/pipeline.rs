@@ -61,7 +61,7 @@ pub struct PipelineDescriptor<'a> {
 }
 
 impl<'a> PipelineDescriptor<'a> {
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         Self {
             width: 100,
             height: 100,
@@ -72,19 +72,19 @@ impl<'a> PipelineDescriptor<'a> {
     }
 
     #[inline]
-    pub fn width(mut self, width: u32) -> Self {
+    pub const fn width(mut self, width: u32) -> Self {
         self.width = width;
         self
     }
 
     #[inline]
-    pub fn height(mut self, height: u32) -> Self {
+    pub const fn height(mut self, height: u32) -> Self {
         self.height = height;
         self
     }
 
     #[inline]
-    pub fn shaders(mut self, shaders: &'a [Shader]) -> Self {
+    pub const fn shaders(mut self, shaders: &'a [Shader]) -> Self {
         self.shaders = shaders;
         self
     }

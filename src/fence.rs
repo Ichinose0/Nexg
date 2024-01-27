@@ -7,11 +7,11 @@ pub struct FenceDescriptor {
 }
 
 impl FenceDescriptor {
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         Self { signaled: false }
     }
 
-    pub fn signaled(mut self, signaled: bool) -> Self {
+    pub const fn signaled(mut self, signaled: bool) -> Self {
         self.signaled = signaled;
         self
     }

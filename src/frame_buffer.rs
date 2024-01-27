@@ -11,7 +11,7 @@ pub struct FrameBufferDescriptor<'a> {
 
 impl<'a> FrameBufferDescriptor<'a> {
     #[inline]
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         Self {
             width: 100,
             height: 100,
