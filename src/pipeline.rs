@@ -10,7 +10,7 @@ use ash::vk::{
     ShaderStageFlags, Viewport,
 };
 
-use crate::{Device, RenderPass, Shader};
+use crate::{Destroy, Device, Fence, Instance, RenderPass, Shader};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BindPoint {
@@ -102,6 +102,18 @@ impl<'a> PipelineLayout<'a> {
         let layout = unsafe { device.device.create_pipeline_layout(&layout_info, None) }.unwrap();
 
         Self { layout, device }
+    }
+}
+
+impl Destroy for PipelineLayout {
+    fn instance(&self, instance: &Instance) {
+
+    }
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device.device.destroy_pipeline_layout(self.layout,None);
+        }
     }
 }
 
@@ -217,5 +229,17 @@ impl Pipeline {
             .iter()
             .map(|x| Self { pipeline: *x })
             .collect::<Vec<Pipeline>>()
+    }
+}
+
+impl Destroy for Pipeline {
+    fn instance(&self, instance: &Instance) {
+
+    }
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device.device.destroy_pipeline(self.pipeline,None);
+        }
     }
 }

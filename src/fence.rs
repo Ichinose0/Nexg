@@ -1,6 +1,6 @@
 use ash::vk::FenceCreateInfo;
 
-use crate::Device;
+use crate::{Destroy, Device, Instance};
 
 pub struct FenceDescriptor {
     signaled: bool,
@@ -44,6 +44,18 @@ impl Fence {
     pub fn reset(&self, device: &Device) {
         unsafe {
             device.device.reset_fences(&[self.fence]).unwrap();
+        }
+    }
+}
+
+impl Destroy for Fence {
+    fn instance(&self, instance: &Instance) {
+
+    }
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device.device.destroy_fence(self.fence,None);
         }
     }
 }

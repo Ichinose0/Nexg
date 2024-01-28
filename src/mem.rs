@@ -1,6 +1,7 @@
 use ash::vk::{
     MemoryAllocateInfo, MemoryPropertyFlags, MemoryRequirements, PhysicalDeviceMemoryProperties,
 };
+use crate::{Destroy, Device, FrameBuffer, Instance};
 
 pub struct DeviceMemory {
     pub(crate) memory: ash::vk::DeviceMemory,
@@ -45,5 +46,17 @@ impl DeviceMemory {
             device.bind_image_memory(image, memory, 0).unwrap();
         }
         Self { memory }
+    }
+}
+
+impl Destroy for DeviceMemory {
+    fn instance(&self, instance: &Instance) {
+
+    }
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device.device.free_memory(self.memory,None);
+        }
     }
 }

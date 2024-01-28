@@ -121,3 +121,11 @@ impl Swapchain {
             .collect::<Vec<Image>>()
     }
 }
+
+impl Drop for Swapchain {
+    fn drop(&mut self) {
+        unsafe {
+            self.swapchain.destroy_swapchain(self.khr,None);
+        }
+    }
+}

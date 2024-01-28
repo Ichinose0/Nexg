@@ -4,7 +4,7 @@ use ash::{
 };
 use std::io::{Cursor, Read};
 
-use crate::Device;
+use crate::{Destroy, Device, Fence, Instance};
 
 ///Indicates shader type
 ///
@@ -71,6 +71,18 @@ impl Shader {
         Shader {
             inner: shader,
             kind,
+        }
+    }
+}
+
+impl Destroy for Shader {
+    fn instance(&self, instance: &Instance) {
+
+    }
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device.device.destroy_shader_module(self.inner,None);
         }
     }
 }

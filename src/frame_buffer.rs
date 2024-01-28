@@ -1,6 +1,6 @@
 use ash::vk::FramebufferCreateInfo;
 
-use crate::{image, Device, ImageView, RenderPass};
+use crate::{image, Device, ImageView, RenderPass, Destroy, Instance};
 
 pub struct FrameBufferDescriptor<'a> {
     width: u32,
@@ -63,5 +63,17 @@ impl FrameBuffer {
             .build();
         let frame_buffer = unsafe { device.device.create_framebuffer(&create_info, None) }.unwrap();
         Self { frame_buffer }
+    }
+}
+
+impl Destroy for FrameBuffer {
+    fn instance(&self, instance: &Instance) {
+
+    }
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device.device.destroy_framebuffer(self.frame_buffer,None);
+        }
     }
 }

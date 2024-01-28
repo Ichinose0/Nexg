@@ -1,3 +1,5 @@
+mod base;
+
 use fgl::{
     CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Fence, FenceDescriptor,
     FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageViewDescriptor,
@@ -63,7 +65,7 @@ fn main() {
     let images = swapchain.images();
     let mut swapchain_images = vec![];
     let desc = ImageViewDescriptor::empty().format(swapchain.format());
-    for i in images {
+    for i in &images {
         swapchain_images.push(i.create_image_view(&device, &desc));
     }
 
@@ -122,7 +124,7 @@ fn main() {
         match event {
             Event::RedrawRequested(id) => {
                 let (img, state) = swapchain.acquire_next_image(Some(&swapchain_image_semaphore));
-                println!("{:?}", state);
+
                 image_rendered_fence.wait(&device, u64::MAX);
                 image_rendered_fence.reset(&device);
                 let begin_desc = RenderPassBeginDescriptor::empty()
@@ -155,7 +157,9 @@ fn main() {
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
                 window_id,
-            } if window_id == window.id() => control_flow.set_exit(),
+            } if window_id == window.id() => {
+                control_flow.set_exit();
+            },
             Event::WindowEvent {
                 event: WindowEvent::CursorMoved { .. },
                 window_id,

@@ -246,6 +246,11 @@ unsafe extern "system" fn vulkan_debug_callback(
     vk::FALSE
 }
 
+pub trait Destroy {
+    fn instance(&self,instance: &Instance);
+    fn device(&self,device: &Device);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

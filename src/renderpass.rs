@@ -4,7 +4,7 @@ use ash::vk::{
     SampleCountFlags, SubpassDescription,
 };
 
-use crate::{BindPoint, Device, DeviceConnecter, FrameBuffer};
+use crate::{BindPoint, Destroy, Device, DeviceConnecter, Fence, FrameBuffer, Instance};
 
 #[derive(Clone, Copy)]
 pub struct RenderPassBeginDescriptor<'a> {
@@ -193,5 +193,17 @@ impl RenderPass {
             .build();
         let render_pass = unsafe { device.device.create_render_pass(&create_info, None) }.unwrap();
         Self { render_pass }
+    }
+}
+
+impl Destroy for RenderPass {
+    fn instance(&self, instance: &Instance) {
+
+    }
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device.device.destroy_render_pass(self.render_pass,None);
+        }
     }
 }
