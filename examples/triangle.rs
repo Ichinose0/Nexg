@@ -1,7 +1,7 @@
 use std::{env, fs::File, io::BufWriter};
 use std::ffi::c_void;
 
-use fgl::{Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, Spirv, StoreOp, SubPass, SubPassDescriptor, Surface, Swapchain};
+use fgl::{Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, Surface, Swapchain};
 use png::text_metadata::ZTXtChunk;
 use simple_logger::SimpleLogger;
 #[derive(Clone, Copy, Debug)]
@@ -105,8 +105,12 @@ fn main() {
     let render_pass = RenderPass::new(&device, &desc);
     let desc = PipelineLayoutDescriptor::empty().render_pass(&render_pass);
     let pipeline_layout = PipelineLayout::new(&device, &desc);
+    let shader_stages = vec![
+        ShaderStageDescriptor::empty().entry_point("main").stage(ShaderStage::Vertex).shaders(&vertex),
+        ShaderStageDescriptor::empty().entry_point("main").stage(ShaderStage::Fragment).shaders(&fragment),
+    ];
     let desc = PipelineDescriptor::empty()
-        .shaders(shaders)
+        .shader_stages(&shader_stages)
         .width(WIDTH)
         .height(HEIGHT);
     let pipeline = Pipeline::new(&device, pipeline_layout, &render_pass, &desc);

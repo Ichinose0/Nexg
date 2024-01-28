@@ -10,7 +10,7 @@ use ash::vk::{
     ShaderStageFlags, Viewport,
 };
 
-use crate::{Destroy, Device, Fence, Instance, RenderPass, Shader};
+use crate::{Destroy, Device, Fence, Instance, RenderPass, Shader, ShaderStageDescriptor};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BindPoint {
@@ -57,7 +57,7 @@ pub struct PipelineDescriptor<'a> {
     height: u32,
     max_depth: f32,
     min_depth: f32,
-    shaders: &'a [Shader],
+    shader_stages: &'a [ShaderStageDescriptor<'a>]
 }
 
 impl<'a> PipelineDescriptor<'a> {
@@ -67,7 +67,7 @@ impl<'a> PipelineDescriptor<'a> {
             height: 100,
             max_depth: 1.0,
             min_depth: 0.0,
-            shaders: &[],
+            shader_stages: &[],
         }
     }
 
@@ -84,8 +84,8 @@ impl<'a> PipelineDescriptor<'a> {
     }
 
     #[inline]
-    pub const fn shaders(mut self, shaders: &'a [Shader]) -> Self {
-        self.shaders = shaders;
+    pub const fn shader_stages(mut self, shader_stages: &'a [ShaderStageDescriptor]) -> Self {
+        self.shader_stages = shader_stages;
         self
     }
 }
@@ -127,25 +127,12 @@ impl Pipeline {
         renderpass: &RenderPass,
         descriptor: &PipelineDescriptor,
     ) -> Vec<Self> {
-        let name = CString::new("main").unwrap();
+
         let mut stages = vec![];
-        for i in descriptor.shaders {
-            match i.kind {
-                crate::ShaderKind::Vertex => stages.push(
-                    PipelineShaderStageCreateInfo::builder()
-                        .stage(ShaderStageFlags::VERTEX)
-                        .module(i.inner)
-                        .name(name.as_c_str())
-                        .build(),
-                ),
-                crate::ShaderKind::Fragment => stages.push(
-                    PipelineShaderStageCreateInfo::builder()
-                        .stage(ShaderStageFlags::FRAGMENT)
-                        .module(i.inner)
-                        .name(name.as_c_str())
-                        .build(),
-                ),
-            }
+        for i in descriptor.shader_stages {
+            let name = CString::new(i.entry_point).unwrap();
+            let create_info = PipelineShaderStageCreateInfo::builder().stage(i.stage.into()).module(i.shaders.unwrap().inner).name(name.as_c_str()).build();
+            stages.push(create_info);
         }
         let viewports = vec![Viewport::builder()
             .width(descriptor.width as f32)

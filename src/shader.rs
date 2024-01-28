@@ -3,6 +3,7 @@ use ash::{
     vk::{ShaderModule, ShaderModuleCreateInfo},
 };
 use std::io::{Cursor, Read};
+use ash::vk::ShaderStageFlags;
 
 use crate::{Destroy, Device, Fence, Instance};
 
@@ -82,5 +83,51 @@ impl Destroy for Shader {
         unsafe {
             device.device.destroy_shader_module(self.inner, None);
         }
+    }
+}
+
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub enum ShaderStage{
+    Vertex,
+    Fragment
+}
+
+impl Into<ash::vk::ShaderStageFlags> for ShaderStage {
+    fn into(self) -> ShaderStageFlags {
+        match self {
+            ShaderStage::Vertex => ShaderStageFlags::VERTEX,
+            ShaderStage::Fragment => ShaderStageFlags::FRAGMENT
+        }
+    }
+}
+
+pub struct ShaderStageDescriptor<'a> {
+    pub(crate) shaders: Option<&'a Shader>,
+    pub(crate) entry_point: &'a str,
+    pub(crate) stage: ShaderStage
+}
+
+impl<'a> ShaderStageDescriptor<'a> {
+    pub fn empty() -> Self {
+        Self {
+            shaders: None,
+            entry_point: "main",
+            stage: ShaderStage::Vertex
+        }
+    }
+
+    pub fn shaders(mut self,shaders: &'a Shader) -> Self {
+        self.shaders = Some(shaders);
+        self
+    }
+
+    pub fn entry_point(mut self,entry_point: &'a str) -> Self {
+        self.entry_point = entry_point;
+        self
+    }
+
+    pub fn stage(mut self,stage: ShaderStage) -> Self {
+        self.stage = stage;
+        self
     }
 }
