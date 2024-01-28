@@ -8,6 +8,7 @@ use ash::vk::{
     SurfaceCapabilitiesKHR,
 };
 
+mod buffer;
 mod device;
 mod fence;
 mod frame_buffer;
@@ -25,6 +26,7 @@ mod surface;
 mod swapchain;
 mod sync;
 
+pub use buffer::*;
 pub use device::*;
 pub use fence::*;
 pub use frame_buffer::*;
@@ -247,8 +249,8 @@ unsafe extern "system" fn vulkan_debug_callback(
 }
 
 pub trait Destroy {
-    fn instance(&self,instance: &Instance);
-    fn device(&self,device: &Device);
+    fn instance(&self, instance: &Instance);
+    fn device(&self, device: &Device);
 }
 
 #[cfg(test)]

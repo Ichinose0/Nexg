@@ -1,7 +1,7 @@
+use crate::{Destroy, Device, FrameBuffer, Instance};
 use ash::vk::{
     MemoryAllocateInfo, MemoryPropertyFlags, MemoryRequirements, PhysicalDeviceMemoryProperties,
 };
-use crate::{Destroy, Device, FrameBuffer, Instance};
 
 pub struct DeviceMemory {
     pub(crate) memory: ash::vk::DeviceMemory,
@@ -47,16 +47,27 @@ impl DeviceMemory {
         }
         Self { memory }
     }
+
+    pub fn alloc_buffer_memory(
+        device: &ash::Device,
+        buffer: ash::vk::Buffer,
+        mem_props: PhysicalDeviceMemoryProperties,
+        mem_req: MemoryRequirements,
+    ) -> Self {
+        let memory = Self::alloc(device, mem_props, mem_req);
+        unsafe {
+            device.bind_buffer_memory(buffer, memory, 0).unwrap();
+        }
+        Self { memory }
+    }
 }
 
 impl Destroy for DeviceMemory {
-    fn instance(&self, instance: &Instance) {
-
-    }
+    fn instance(&self, instance: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
-            device.device.free_memory(self.memory,None);
+            device.device.free_memory(self.memory, None);
         }
     }
 }

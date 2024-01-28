@@ -197,13 +197,11 @@ impl RenderPass {
 }
 
 impl Destroy for RenderPass {
-    fn instance(&self, instance: &Instance) {
-
-    }
+    fn instance(&self, instance: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
-            device.device.destroy_render_pass(self.render_pass,None);
+            device.device.destroy_render_pass(self.render_pass, None);
         }
     }
 }

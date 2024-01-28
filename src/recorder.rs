@@ -40,13 +40,11 @@ impl CommandPool {
 }
 
 impl Destroy for CommandPool {
-    fn instance(&self, instance: &Instance) {
-
-    }
+    fn instance(&self, instance: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
-            device.device.destroy_command_pool(self.0,None);
+            device.device.destroy_command_pool(self.0, None);
         }
     }
 }

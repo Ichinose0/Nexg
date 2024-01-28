@@ -125,7 +125,7 @@ impl Swapchain {
 impl Drop for Swapchain {
     fn drop(&mut self) {
         unsafe {
-            self.swapchain.destroy_swapchain(self.khr,None);
+            self.swapchain.destroy_swapchain(self.khr, None);
         }
     }
 }

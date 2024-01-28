@@ -105,14 +105,12 @@ impl<'a> PipelineLayout<'a> {
     }
 }
 
-impl Destroy for PipelineLayout {
-    fn instance(&self, instance: &Instance) {
-
-    }
+impl Destroy for PipelineLayout<'_> {
+    fn instance(&self, instance: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
-            device.device.destroy_pipeline_layout(self.layout,None);
+            device.device.destroy_pipeline_layout(self.layout, None);
         }
     }
 }
@@ -233,13 +231,11 @@ impl Pipeline {
 }
 
 impl Destroy for Pipeline {
-    fn instance(&self, instance: &Instance) {
-
-    }
+    fn instance(&self, instance: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
-            device.device.destroy_pipeline(self.pipeline,None);
+            device.device.destroy_pipeline(self.pipeline, None);
         }
     }
 }

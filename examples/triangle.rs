@@ -1,16 +1,40 @@
 use std::{env, fs::File, io::BufWriter};
+use std::ffi::c_void;
 
-use fgl::{
-    CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, FrameBuffer, FrameBufferDescriptor,
-    Image, ImageDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor,
-    PipelineLayout, PipelineLayoutDescriptor, RenderPass, RenderPassBeginDescriptor,
-    RenderPassDescriptor, Shader, ShaderKind, Spirv, StoreOp, SubPass, SubPassDescriptor, Surface,
-    Swapchain,
-};
+use fgl::{Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, Spirv, StoreOp, SubPass, SubPassDescriptor, Surface, Swapchain};
 use png::text_metadata::ZTXtChunk;
 use simple_logger::SimpleLogger;
+#[derive(Clone, Copy, Debug)]
+pub struct Vertex {
+    x: f32,
+    y: f32,
+    z: f32,
+    w: f32,
+}
+
 const WIDTH: u32 = 640;
 const HEIGHT: u32 = 480;
+
+const VERTEX: [Vertex; 3] = [
+    Vertex {
+        x: 0.0,
+        y: -0.5,
+        z: 0.0,
+        w: 0.0,
+    },
+    Vertex {
+        x: 0.5,
+        y: 0.5,
+        z: 0.0,
+        w: 0.0,
+    },
+    Vertex {
+        x: -0.5,
+        y: 0.5,
+        z: 0.0,
+        w: 0.0,
+    },
+];
 
 fn main() {
     SimpleLogger::new().init().unwrap();
@@ -38,13 +62,14 @@ fn main() {
     let device = connecter.create_device(index);
 
     let queue = device.get_queue(index);
-    let desc = CommandPoolDescriptor::new().queue_family_index(index);
+    let desc = CommandPoolDescriptor::empty().queue_family_index(index);
     let pool = device.create_command_pool(&desc);
-    let desc = CommandRecorderDescriptor::new();
+    let desc = CommandRecorderDescriptor::empty();
     let recorders = device.allocate_command_recorder(pool, &desc);
     let desc = ImageDescriptor::new().extent(Extent3d::new(WIDTH, HEIGHT, 1));
     let image = Image::create(&device, connecter, &desc);
-    let image_view = image.create_image_view(&device);
+    let desc = ImageViewDescriptor::empty().format(ImageFormat::R8G8B8A8Unorm);
+    let image_view = image.create_image_view(&device, &desc);
 
     let vertex = Shader::new(
         &device,
@@ -63,6 +88,12 @@ fn main() {
         )),
         ShaderKind::Fragment,
     );
+
+    let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>()*VERTEX.len());
+    let vertex_buffer = Buffer::new(&instance,connecter,&device,&desc);
+    vertex_buffer.write(&device,VERTEX.as_ptr() as *const c_void);
+    vertex_buffer.lock(&device);
+
     let shaders = &[vertex, fragment];
     let desc = SubPassDescriptor::empty();
     let subpass = SubPass::new(connecter, &desc);
@@ -90,13 +121,15 @@ fn main() {
     let begin_desc = RenderPassBeginDescriptor::empty()
         .width(WIDTH)
         .height(HEIGHT)
+        .clear(1.0, 1.0, 1.0, 1.0)
         .render_pass(&render_pass)
         .frame_buffer(&framebuffer);
     recorders[0].begin(&device, begin_desc);
     recorders[0].draw(&pipeline[0], &device, 3, 1, 0, 0);
     recorders[0].end(&device);
 
-    queue.submit(&device, &recorders);
+    let desc = QueueSubmitDescriptor::empty();
+    queue.submit(&device, &desc, &recorders);
 
     let file = File::create("triangle.png").unwrap();
     let w = &mut BufWriter::new(file);

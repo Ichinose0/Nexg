@@ -159,7 +159,7 @@ fn main() {
                 window_id,
             } if window_id == window.id() => {
                 control_flow.set_exit();
-            },
+            }
             Event::WindowEvent {
                 event: WindowEvent::CursorMoved { .. },
                 window_id,

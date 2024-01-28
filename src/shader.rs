@@ -76,13 +76,11 @@ impl Shader {
 }
 
 impl Destroy for Shader {
-    fn instance(&self, instance: &Instance) {
-
-    }
+    fn instance(&self, instance: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
-            device.device.destroy_shader_module(self.inner,None);
+            device.device.destroy_shader_module(self.inner, None);
         }
     }
 }

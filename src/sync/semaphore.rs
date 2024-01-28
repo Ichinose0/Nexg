@@ -24,13 +24,11 @@ impl Semaphore {
 }
 
 impl Destroy for Semaphore {
-    fn instance(&self, instance: &Instance) {
-
-    }
+    fn instance(&self, instance: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
-            device.device.destroy_semaphore(self.semaphore,None);
+            device.device.destroy_semaphore(self.semaphore, None);
         }
     }
 }

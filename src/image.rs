@@ -251,27 +251,22 @@ impl ImageView {
 }
 
 impl Destroy for Image {
-    fn instance(&self, instance: &Instance) {
-
-    }
+    fn instance(&self, instance: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
-            device.device.destroy_image(self.image,None);
+            device.device.destroy_image(self.image, None);
         }
         device.destroy(self.memory.as_ref().unwrap());
     }
 }
 
 impl Destroy for ImageView {
-    fn instance(&self, instance: &Instance) {
-
-    }
+    fn instance(&self, instance: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
-            device.device.destroy_image_view(self.image_view,None);
+            device.device.destroy_image_view(self.image_view, None);
         }
     }
 }
-

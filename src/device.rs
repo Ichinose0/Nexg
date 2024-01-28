@@ -1,4 +1,7 @@
-use crate::{CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy, DeviceConnecter, Instance, Queue};
+use crate::{
+    CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy,
+    DeviceConnecter, Instance, Queue,
+};
 
 pub(crate) enum DeviceFeature {
     Swapchain,
@@ -35,7 +38,7 @@ impl Device {
 
     pub fn destroy<D>(&self, object: &D)
     where
-        D: Destroy
+        D: Destroy,
     {
         object.device(&self);
     }
