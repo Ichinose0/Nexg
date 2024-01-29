@@ -1,4 +1,4 @@
-use crate::{Destroy, Device, Instance, Pipeline, RenderPassBeginDescriptor};
+use crate::{Buffer, Destroy, Device, Instance, Pipeline, RenderPassBeginDescriptor};
 use ash::vk::{
     ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo,
     CommandBufferLevel, CommandBufferResetFlags, CommandPoolCreateFlags, CommandPoolCreateInfo,
@@ -130,9 +130,26 @@ impl CommandRecorder {
     }
 
     #[inline]
+    pub fn bind_pipeline(&self,device: &Device,pipeline: &Pipeline) {
+        unsafe {
+            device.device.cmd_bind_pipeline(
+                self.buffer,
+                PipelineBindPoint::GRAPHICS,
+                pipeline.pipeline,
+            );
+        }
+    }
+
+    #[inline]
+    pub fn bind_vertex_buffer(&self,device: &Device,buffer: &Buffer) {
+        unsafe {
+            device.device.cmd_bind_vertex_buffers(self.buffer,0,&[buffer.buffer],&[0])
+        }
+    }
+
+    #[inline]
     pub fn draw(
         &self,
-        pipeline: &Pipeline,
         device: &Device,
         vertex_count: u32,
         instance_count: u32,
@@ -140,11 +157,6 @@ impl CommandRecorder {
         first_instance: u32,
     ) {
         unsafe {
-            device.device.cmd_bind_pipeline(
-                self.buffer,
-                PipelineBindPoint::GRAPHICS,
-                pipeline.pipeline,
-            );
             device.device.cmd_draw(
                 self.buffer,
                 vertex_count,

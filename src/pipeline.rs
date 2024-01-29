@@ -145,6 +145,12 @@ impl<'a> PipelineDescriptor<'a> {
     }
 
     #[inline]
+    pub const fn input_descriptor(mut self,input_descriptor: &'a PipelineVertexInputDescriptor) -> Self {
+        self.input_descriptor = Some(input_descriptor);
+        self
+    }
+
+    #[inline]
     pub const fn width(mut self, width: u32) -> Self {
         self.width = width;
         self

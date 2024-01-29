@@ -41,7 +41,7 @@ impl BufferDescriptor {
 }
 
 pub struct Buffer {
-    buffer: ash::vk::Buffer,
+    pub(crate) buffer: ash::vk::Buffer,
     memory: DeviceMemory,
     size: usize,
 }

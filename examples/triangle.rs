@@ -118,6 +118,7 @@ fn main() {
     let vertex_input_desc = PipelineVertexInputDescriptor::empty().attribute_desc(&attribute_desc).binding_desc(&binding_desc);
     let desc = PipelineDescriptor::empty()
         .shader_stages(&shader_stages)
+        .input_descriptor(&vertex_input_desc)
         .width(WIDTH)
         .height(HEIGHT);
     let pipeline = Pipeline::new(&device, pipeline_layout, &render_pass, &desc);
@@ -136,7 +137,9 @@ fn main() {
         .render_pass(&render_pass)
         .frame_buffer(&framebuffer);
     recorders[0].begin(&device, begin_desc);
-    recorders[0].draw(&pipeline[0], &device, 3, 1, 0, 0);
+    recorders[0].bind_pipeline(&device,&pipeline[0]);
+    recorders[0].bind_vertex_buffer(&device,&vertex_buffer);
+    recorders[0].draw( &device, 3, 1, 0, 0);
     recorders[0].end(&device);
 
     let desc = QueueSubmitDescriptor::empty();
