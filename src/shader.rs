@@ -1,11 +1,11 @@
+use ash::vk::ShaderStageFlags;
 use ash::{
     util::read_spv,
     vk::{ShaderModule, ShaderModuleCreateInfo},
 };
 use std::io::{Cursor, Read};
-use ash::vk::ShaderStageFlags;
 
-use crate::{Destroy, Device, Fence, Instance};
+use crate::{Destroy, Device, Instance};
 
 ///Indicates shader type
 ///
@@ -13,6 +13,7 @@ use crate::{Destroy, Device, Fence, Instance};
 /// * `Vertex` - Vertex shader.
 /// * `Fragment` - Fragment shader.
 #[derive(Clone, Copy, Debug)]
+#[deprecated(since = "0.0.5", note = "This enumerator is no longer needed")]
 pub enum ShaderKind {
     Vertex,
     Fragment,
@@ -57,11 +58,10 @@ impl Spirv {
 #[derive(Clone, Copy, Debug)]
 pub struct Shader {
     pub(crate) inner: ShaderModule,
-    pub(crate) kind: ShaderKind,
 }
 
 impl Shader {
-    pub fn new(device: &Device, spirv: Spirv, kind: ShaderKind) -> Shader {
+    pub fn new(device: &Device, spirv: Spirv) -> Shader {
         let shader_create_info = ShaderModuleCreateInfo::builder().code(&spirv.data).build();
         let shader = unsafe {
             device
@@ -69,15 +69,12 @@ impl Shader {
                 .create_shader_module(&shader_create_info, None)
         }
         .unwrap();
-        Shader {
-            inner: shader,
-            kind,
-        }
+        Shader { inner: shader }
     }
 }
 
 impl Destroy for Shader {
-    fn instance(&self, instance: &Instance) {}
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
@@ -86,17 +83,17 @@ impl Destroy for Shader {
     }
 }
 
-#[derive(Clone,Copy,Debug,Eq,PartialEq)]
-pub enum ShaderStage{
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ShaderStage {
     Vertex,
-    Fragment
+    Fragment,
 }
 
-impl Into<ash::vk::ShaderStageFlags> for ShaderStage {
+impl Into<ShaderStageFlags> for ShaderStage {
     fn into(self) -> ShaderStageFlags {
         match self {
             ShaderStage::Vertex => ShaderStageFlags::VERTEX,
-            ShaderStage::Fragment => ShaderStageFlags::FRAGMENT
+            ShaderStage::Fragment => ShaderStageFlags::FRAGMENT,
         }
     }
 }
@@ -104,7 +101,7 @@ impl Into<ash::vk::ShaderStageFlags> for ShaderStage {
 pub struct ShaderStageDescriptor<'a> {
     pub(crate) shaders: Option<&'a Shader>,
     pub(crate) entry_point: &'a str,
-    pub(crate) stage: ShaderStage
+    pub(crate) stage: ShaderStage,
 }
 
 impl<'a> ShaderStageDescriptor<'a> {
@@ -112,21 +109,21 @@ impl<'a> ShaderStageDescriptor<'a> {
         Self {
             shaders: None,
             entry_point: "main",
-            stage: ShaderStage::Vertex
+            stage: ShaderStage::Vertex,
         }
     }
 
-    pub fn shaders(mut self,shaders: &'a Shader) -> Self {
+    pub fn shaders(mut self, shaders: &'a Shader) -> Self {
         self.shaders = Some(shaders);
         self
     }
 
-    pub fn entry_point(mut self,entry_point: &'a str) -> Self {
+    pub fn entry_point(mut self, entry_point: &'a str) -> Self {
         self.entry_point = entry_point;
         self
     }
 
-    pub fn stage(mut self,stage: ShaderStage) -> Self {
+    pub fn stage(mut self, stage: ShaderStage) -> Self {
         self.stage = stage;
         self
     }

@@ -1,4 +1,4 @@
-use crate::{Destroy, Device, FrameBuffer, Instance};
+use crate::{Destroy, Device, Instance};
 use ash::vk::{
     MemoryAllocateInfo, MemoryPropertyFlags, MemoryRequirements, PhysicalDeviceMemoryProperties,
 };
@@ -63,7 +63,7 @@ impl DeviceMemory {
 }
 
 impl Destroy for DeviceMemory {
-    fn instance(&self, instance: &Instance) {}
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {

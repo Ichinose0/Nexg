@@ -1,4 +1,4 @@
-use crate::{CommandRecorder, Device, Semaphore, Swapchain};
+use crate::{CommandRecorder, Device, Semaphore};
 use ash::vk::{CommandBuffer, Fence, SubmitInfo};
 
 pub struct QueuePresentDescriptor<'a> {

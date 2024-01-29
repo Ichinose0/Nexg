@@ -3,8 +3,7 @@ use ash::vk::{
 };
 
 use crate::{
-    Device, DeviceConnecter, Fence, Image, ImageFormat, Instance, Queue, QueuePresentDescriptor,
-    Surface,
+    Device, DeviceConnecter, Image, ImageFormat, Instance, QueuePresentDescriptor, Surface,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -87,7 +86,7 @@ impl Swapchain {
                 (image, state)
             }
 
-            Err(e) => panic!("Can't get next image"),
+            Err(_e) => panic!("Can't get next image"),
         }
     }
 
@@ -96,12 +95,12 @@ impl Swapchain {
     }
 
     pub fn present(&self, descriptor: &QueuePresentDescriptor, image: u32) {
-        let w_semaphores: Vec<ash::vk::Semaphore> = descriptor
+        let w_semaphores: Vec<Semaphore> = descriptor
             .wait_semaphores
             .iter()
             .map(|x| x.semaphore)
             .collect();
-        let mut present_info = PresentInfoKHR::builder()
+        let present_info = PresentInfoKHR::builder()
             .swapchains(&[self.khr])
             .image_indices(&[image])
             .wait_semaphores(&w_semaphores)

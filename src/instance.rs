@@ -1,7 +1,6 @@
 use ash::extensions::ext::DebugUtils;
 use ash::vk::{
-    self, DebugUtilsMessengerEXT, DeviceCreateInfo, MemoryRequirements, PhysicalDevice,
-    PhysicalDeviceMemoryProperties,
+    self, DebugUtilsMessengerEXT, DeviceCreateInfo, PhysicalDevice, PhysicalDeviceMemoryProperties,
 };
 use ash::{vk::InstanceCreateInfo, Entry};
 
@@ -60,7 +59,7 @@ impl InstanceBuilder {
 
     pub fn build(mut self) -> Instance {
         self.feature.extensions.push(DebugUtils::name().as_ptr());
-        let entry = ash::Entry::linked();
+        let entry = Entry::linked();
         let create_info = InstanceCreateInfo::builder()
             .enabled_extension_names(&self.feature.extensions)
             .build();
@@ -147,9 +146,9 @@ impl Instance {
         match self.entry.try_enumerate_instance_version() {
             Ok(v) => match v {
                 Some(v) => {
-                    let major = ash::vk::api_version_major(v);
-                    let minor = ash::vk::api_version_minor(v);
-                    let patch = ash::vk::api_version_patch(v);
+                    let major = vk::api_version_major(v);
+                    let minor = vk::api_version_minor(v);
+                    let patch = vk::api_version_patch(v);
                     Some(format!("{}.{}.{}", major, minor, patch))
                 }
                 None => return None,

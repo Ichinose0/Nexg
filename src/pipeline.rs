@@ -7,10 +7,10 @@ use ash::vk::{
     PipelineMultisampleStateCreateInfo, PipelineRasterizationStateCreateInfo,
     PipelineShaderStageCreateInfo, PipelineVertexInputStateCreateInfo,
     PipelineViewportStateCreateInfo, PolygonMode, PrimitiveTopology, Rect2D, SampleCountFlags,
-    ShaderStageFlags, Viewport,
+    Viewport,
 };
 
-use crate::{Destroy, Device, Fence, Instance, RenderPass, Shader, ShaderStageDescriptor};
+use crate::{Destroy, Device, Instance, RenderPass, ShaderStageDescriptor};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BindPoint {
@@ -57,7 +57,7 @@ pub struct PipelineDescriptor<'a> {
     height: u32,
     max_depth: f32,
     min_depth: f32,
-    shader_stages: &'a [ShaderStageDescriptor<'a>]
+    shader_stages: &'a [ShaderStageDescriptor<'a>],
 }
 
 impl<'a> PipelineDescriptor<'a> {
@@ -97,7 +97,7 @@ pub struct PipelineLayout<'a> {
 
 impl<'a> PipelineLayout<'a> {
     #[inline]
-    pub fn new(device: &'a Device, descriptor: &PipelineLayoutDescriptor) -> Self {
+    pub fn new(device: &'a Device, _descriptor: &PipelineLayoutDescriptor) -> Self {
         let layout_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]).build();
         let layout = unsafe { device.device.create_pipeline_layout(&layout_info, None) }.unwrap();
 
@@ -106,7 +106,7 @@ impl<'a> PipelineLayout<'a> {
 }
 
 impl Destroy for PipelineLayout<'_> {
-    fn instance(&self, instance: &Instance) {}
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
@@ -123,15 +123,18 @@ impl Pipeline {
     #[inline]
     pub fn new(
         device: &Device,
-        pipeline_layout: PipelineLayout,
+        _pipeline_layout: PipelineLayout,
         renderpass: &RenderPass,
         descriptor: &PipelineDescriptor,
     ) -> Vec<Self> {
-
         let mut stages = vec![];
+        let name = CString::new("main").unwrap();
         for i in descriptor.shader_stages {
-            let name = CString::new(i.entry_point).unwrap();
-            let create_info = PipelineShaderStageCreateInfo::builder().stage(i.stage.into()).module(i.shaders.unwrap().inner).name(name.as_c_str()).build();
+            let create_info = PipelineShaderStageCreateInfo::builder()
+                .stage(i.stage.into())
+                .module(i.shaders.unwrap().inner)
+                .name(name.as_c_str())
+                .build();
             stages.push(create_info);
         }
         let viewports = vec![Viewport::builder()
@@ -218,7 +221,7 @@ impl Pipeline {
 }
 
 impl Destroy for Pipeline {
-    fn instance(&self, instance: &Instance) {}
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {

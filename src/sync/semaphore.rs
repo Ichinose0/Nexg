@@ -1,4 +1,4 @@
-use crate::{Destroy, Device, Fence, Instance};
+use crate::{Destroy, Device, Instance};
 use ash::vk::SemaphoreCreateInfo;
 
 pub struct SemaphoreDescriptor {}
@@ -16,7 +16,7 @@ pub struct Semaphore {
 }
 
 impl Semaphore {
-    pub fn new(device: &Device, descriptor: &SemaphoreDescriptor) -> Self {
+    pub fn new(device: &Device, _descriptor: &SemaphoreDescriptor) -> Self {
         let create_info = SemaphoreCreateInfo::builder().build();
         let semaphore = unsafe { device.device.create_semaphore(&create_info, None) }.unwrap();
         Self { semaphore }
@@ -24,7 +24,7 @@ impl Semaphore {
 }
 
 impl Destroy for Semaphore {
-    fn instance(&self, instance: &Instance) {}
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {

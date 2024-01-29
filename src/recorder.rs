@@ -1,4 +1,4 @@
-use crate::{Destroy, Device, Fence, Instance, Pipeline, RenderPass, RenderPassBeginDescriptor};
+use crate::{Destroy, Device, Instance, Pipeline, RenderPassBeginDescriptor};
 use ash::vk::{
     ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo,
     CommandBufferLevel, CommandBufferResetFlags, CommandPoolCreateFlags, CommandPoolCreateInfo,
@@ -40,7 +40,7 @@ impl CommandPool {
 }
 
 impl Destroy for CommandPool {
-    fn instance(&self, instance: &Instance) {}
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {

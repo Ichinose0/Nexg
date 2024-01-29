@@ -49,7 +49,7 @@ impl Fence {
 }
 
 impl Destroy for Fence {
-    fn instance(&self, instance: &Instance) {}
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {

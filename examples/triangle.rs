@@ -1,7 +1,14 @@
-use std::{env, fs::File, io::BufWriter};
 use std::ffi::c_void;
+use std::{env, fs::File, io::BufWriter};
 
-use fgl::{Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, Surface, Swapchain};
+use fgl::{
+    Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d,
+    FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor,
+    InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout,
+    PipelineLayoutDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor,
+    RenderPassDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp,
+    SubPass, SubPassDescriptor,
+};
 use png::text_metadata::ZTXtChunk;
 use simple_logger::SimpleLogger;
 #[derive(Clone, Copy, Debug)]
@@ -38,7 +45,7 @@ const VERTEX: [Vertex; 3] = [
 
 fn main() {
     SimpleLogger::new().init().unwrap();
-    let mut feature = InstanceFeature::empty();
+    let feature = InstanceFeature::empty();
     let instance = InstanceBuilder::new().feature(feature).build();
     let connecters = instance.enumerate_connecters();
     let mut index = 0;
@@ -77,7 +84,6 @@ fn main() {
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.vert.spv"
         )),
-        ShaderKind::Vertex,
     );
 
     let fragment = Shader::new(
@@ -86,15 +92,14 @@ fn main() {
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.frag.spv"
         )),
-        ShaderKind::Fragment,
     );
 
-    let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>()*VERTEX.len());
-    let vertex_buffer = Buffer::new(&instance,connecter,&device,&desc);
-    vertex_buffer.write(&device,VERTEX.as_ptr() as *const c_void);
+    let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
+    let vertex_buffer = Buffer::new(connecter, &device, &desc);
+    vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void);
     vertex_buffer.lock(&device);
 
-    let shaders = &[vertex, fragment];
+    let _shaders = &[vertex, fragment];
     let desc = SubPassDescriptor::empty();
     let subpass = SubPass::new(connecter, &desc);
     let subpasses = &[subpass];
@@ -106,8 +111,14 @@ fn main() {
     let desc = PipelineLayoutDescriptor::empty().render_pass(&render_pass);
     let pipeline_layout = PipelineLayout::new(&device, &desc);
     let shader_stages = vec![
-        ShaderStageDescriptor::empty().entry_point("main").stage(ShaderStage::Vertex).shaders(&vertex),
-        ShaderStageDescriptor::empty().entry_point("main").stage(ShaderStage::Fragment).shaders(&fragment),
+        ShaderStageDescriptor::empty()
+            .entry_point("main")
+            .stage(ShaderStage::Vertex)
+            .shaders(&vertex),
+        ShaderStageDescriptor::empty()
+            .entry_point("main")
+            .stage(ShaderStage::Fragment)
+            .shaders(&fragment),
     ];
     let desc = PipelineDescriptor::empty()
         .shader_stages(&shader_stages)

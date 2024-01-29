@@ -5,7 +5,6 @@ use std::{borrow::Cow, ffi::CStr};
 
 use ash::vk::{
     self, DebugUtilsMessageSeverityFlagsEXT, DeviceCreateInfo, DeviceQueueCreateInfo, QueueFlags,
-    SurfaceCapabilitiesKHR,
 };
 
 mod buffer;
@@ -70,7 +69,7 @@ impl QueueFamilyProperties {
 }
 
 #[derive(Clone, Copy)]
-pub struct DeviceConnecter<'a>(pub(crate) ash::vk::PhysicalDevice, &'a Instance);
+pub struct DeviceConnecter<'a>(pub(crate) vk::PhysicalDevice, &'a Instance);
 
 impl<'a> DeviceConnecter<'a> {
     pub fn create_device(self, queue_family_index: usize) -> Device {
@@ -99,7 +98,7 @@ impl<'a> DeviceConnecter<'a> {
     }
 
     #[doc(hidden)]
-    pub(crate) fn get_memory_properties(&self) -> ash::vk::PhysicalDeviceMemoryProperties {
+    pub(crate) fn get_memory_properties(&self) -> vk::PhysicalDeviceMemoryProperties {
         self.1.get_memory_properties(self.0)
     }
 
@@ -124,10 +123,7 @@ impl<'a> DeviceConnecter<'a> {
 
     #[doc(hidden)]
     #[cfg(feature = "window")]
-    pub(crate) fn get_surface_capabilities(
-        &self,
-        surface: &Surface,
-    ) -> ash::vk::SurfaceCapabilitiesKHR {
+    pub(crate) fn get_surface_capabilities(&self, surface: &Surface) -> vk::SurfaceCapabilitiesKHR {
         unsafe {
             surface
                 .surface
@@ -138,7 +134,7 @@ impl<'a> DeviceConnecter<'a> {
 
     #[doc(hidden)]
     #[cfg(feature = "window")]
-    pub(crate) fn get_surface_formats(&self, surface: &Surface) -> Vec<ash::vk::SurfaceFormatKHR> {
+    pub(crate) fn get_surface_formats(&self, surface: &Surface) -> Vec<vk::SurfaceFormatKHR> {
         unsafe {
             surface
                 .surface
@@ -149,10 +145,7 @@ impl<'a> DeviceConnecter<'a> {
 
     #[doc(hidden)]
     #[cfg(feature = "window")]
-    pub(crate) fn get_surface_present_modes(
-        &self,
-        surface: &Surface,
-    ) -> Vec<ash::vk::PresentModeKHR> {
+    pub(crate) fn get_surface_present_modes(&self, surface: &Surface) -> Vec<vk::PresentModeKHR> {
         unsafe {
             surface
                 .surface
@@ -162,8 +155,8 @@ impl<'a> DeviceConnecter<'a> {
     }
 }
 
-impl From<ash::vk::QueueFamilyProperties> for QueueFamilyProperties {
-    fn from(value: ash::vk::QueueFamilyProperties) -> Self {
+impl From<vk::QueueFamilyProperties> for QueueFamilyProperties {
+    fn from(value: vk::QueueFamilyProperties) -> Self {
         let graphic_support = value.queue_flags.contains(QueueFlags::GRAPHICS);
         let compute_support = value.queue_flags.contains(QueueFlags::COMPUTE);
         let transfer_support = value.queue_flags.contains(QueueFlags::TRANSFER);
@@ -205,9 +198,9 @@ impl Extent3d {
     }
 }
 
-impl Into<ash::vk::Extent3D> for Extent3d {
-    fn into(self) -> ash::vk::Extent3D {
-        ash::vk::Extent3D {
+impl Into<vk::Extent3D> for Extent3d {
+    fn into(self) -> vk::Extent3D {
+        vk::Extent3D {
             width: self.width,
             height: self.height,
             depth: self.depth,
@@ -217,15 +210,15 @@ impl Into<ash::vk::Extent3D> for Extent3d {
 
 #[doc(hidden)]
 unsafe extern "system" fn vulkan_debug_callback(
-    message_severity: vk::DebugUtilsMessageSeverityFlagsEXT,
-    message_type: vk::DebugUtilsMessageTypeFlagsEXT,
+    message_severity: DebugUtilsMessageSeverityFlagsEXT,
+    _message_type: vk::DebugUtilsMessageTypeFlagsEXT,
     p_callback_data: *const vk::DebugUtilsMessengerCallbackDataEXT,
     _user_data: *mut std::os::raw::c_void,
 ) -> vk::Bool32 {
     let callback_data = *p_callback_data;
-    let message_id_number = callback_data.message_id_number;
+    let _message_id_number = callback_data.message_id_number;
 
-    let message_id_name = if callback_data.p_message_id_name.is_null() {
+    let _message_id_name = if callback_data.p_message_id_name.is_null() {
         Cow::from("")
     } else {
         CStr::from_ptr(callback_data.p_message_id_name).to_string_lossy()
@@ -255,8 +248,6 @@ pub trait Destroy {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn it_works() {}
 }

@@ -1,12 +1,11 @@
 mod base;
 
 use fgl::{
-    CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, Fence, FenceDescriptor,
-    FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageViewDescriptor,
-    InstanceBuilder, InstanceFeature, Pipeline, PipelineDescriptor, PipelineLayout,
-    PipelineLayoutDescriptor, QueuePresentDescriptor, QueueSubmitDescriptor, RenderPass,
-    RenderPassBeginDescriptor, RenderPassDescriptor, Semaphore, SemaphoreDescriptor, Shader,
-    ShaderKind, Spirv, SubPass, SubPassDescriptor, Surface, Swapchain,
+    CommandPoolDescriptor, CommandRecorderDescriptor, Fence, FenceDescriptor, FrameBuffer,
+    FrameBufferDescriptor, ImageViewDescriptor, InstanceBuilder, InstanceFeature, Pipeline,
+    PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, QueuePresentDescriptor,
+    QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Semaphore,
+    SemaphoreDescriptor, Shader, ShaderKind, Spirv, SubPass, SubPassDescriptor, Surface, Swapchain,
 };
 use simple_logger::SimpleLogger;
 use winit::{
@@ -122,7 +121,7 @@ fn main() {
         control_flow.set_wait();
 
         match event {
-            Event::RedrawRequested(id) => {
+            Event::RedrawRequested(_id) => {
                 let (img, state) = swapchain.acquire_next_image(Some(&swapchain_image_semaphore));
 
                 image_rendered_fence.wait(&device, u64::MAX);

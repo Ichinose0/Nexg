@@ -1,10 +1,9 @@
 use ash::vk::{
-    AttachmentDescription, AttachmentLoadOp, AttachmentReference, AttachmentStoreOp, ClearValue,
-    Extent2D, Format, ImageLayout, Offset2D, Rect2D, RenderPassBeginInfo, RenderPassCreateInfo,
-    SampleCountFlags, SubpassDescription,
+    AttachmentDescription, AttachmentLoadOp, AttachmentReference, AttachmentStoreOp, Format,
+    ImageLayout, RenderPassCreateInfo, SampleCountFlags, SubpassDescription,
 };
 
-use crate::{BindPoint, Destroy, Device, DeviceConnecter, Fence, FrameBuffer, Instance};
+use crate::{BindPoint, Destroy, Device, DeviceConnecter, FrameBuffer, Instance};
 
 #[derive(Clone, Copy)]
 pub struct RenderPassBeginDescriptor<'a> {
@@ -72,12 +71,12 @@ pub enum LoadOp {
     DontCare,
 }
 
-impl Into<ash::vk::AttachmentLoadOp> for LoadOp {
-    fn into(self) -> ash::vk::AttachmentLoadOp {
+impl Into<AttachmentLoadOp> for LoadOp {
+    fn into(self) -> AttachmentLoadOp {
         match self {
-            LoadOp::Load => ash::vk::AttachmentLoadOp::LOAD,
-            LoadOp::Clear => ash::vk::AttachmentLoadOp::CLEAR,
-            LoadOp::DontCare => ash::vk::AttachmentLoadOp::DONT_CARE,
+            LoadOp::Load => AttachmentLoadOp::LOAD,
+            LoadOp::Clear => AttachmentLoadOp::CLEAR,
+            LoadOp::DontCare => AttachmentLoadOp::DONT_CARE,
         }
     }
 }
@@ -88,11 +87,11 @@ pub enum StoreOp {
     DontCare,
 }
 
-impl Into<ash::vk::AttachmentStoreOp> for StoreOp {
-    fn into(self) -> ash::vk::AttachmentStoreOp {
+impl Into<AttachmentStoreOp> for StoreOp {
+    fn into(self) -> AttachmentStoreOp {
         match self {
-            StoreOp::Store => ash::vk::AttachmentStoreOp::STORE,
-            StoreOp::DontCare => ash::vk::AttachmentStoreOp::DONT_CARE,
+            StoreOp::Store => AttachmentStoreOp::STORE,
+            StoreOp::DontCare => AttachmentStoreOp::DONT_CARE,
         }
     }
 }
@@ -116,7 +115,7 @@ pub struct SubPass {
 
 impl SubPass {
     #[inline]
-    pub fn new(connecter: DeviceConnecter, descriptor: &SubPassDescriptor) -> Self {
+    pub fn new(_connecter: DeviceConnecter, descriptor: &SubPassDescriptor) -> Self {
         let attachment_refs = vec![AttachmentReference::builder()
             .attachment(0)
             .layout(ImageLayout::COLOR_ATTACHMENT_OPTIMAL)
@@ -197,7 +196,7 @@ impl RenderPass {
 }
 
 impl Destroy for RenderPass {
-    fn instance(&self, instance: &Instance) {}
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {

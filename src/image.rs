@@ -1,10 +1,10 @@
 use std::os::raw::c_void;
 
-use crate::{Destroy, Device, DeviceConnecter, DeviceMemory, Extent3d, FrameBuffer, Instance};
+use crate::{Destroy, Device, DeviceConnecter, DeviceMemory, Extent3d, Instance};
 use ash::vk::{
     ComponentMapping, ComponentSwizzle, Format, ImageAspectFlags, ImageCreateInfo, ImageLayout,
     ImageSubresourceRange, ImageTiling, ImageUsageFlags, ImageViewCreateInfo, ImageViewType,
-    MemoryMapFlags, MemoryPropertyFlags, SampleCountFlags, SharingMode,
+    MemoryMapFlags, SampleCountFlags, SharingMode,
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -251,7 +251,7 @@ impl ImageView {
 }
 
 impl Destroy for Image {
-    fn instance(&self, instance: &Instance) {}
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
@@ -262,7 +262,7 @@ impl Destroy for Image {
 }
 
 impl Destroy for ImageView {
-    fn instance(&self, instance: &Instance) {}
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {

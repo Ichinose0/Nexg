@@ -1,6 +1,5 @@
 use crate::{
-    CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy,
-    DeviceConnecter, Instance, Queue,
+    CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy, Queue,
 };
 
 pub(crate) enum DeviceFeature {
