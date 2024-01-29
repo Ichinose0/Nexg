@@ -1,6 +1,14 @@
 use std::ffi::CString;
 
-use ash::vk::{ColorComponentFlags, CullModeFlags, Extent2D, Format, FrontFace, GraphicsPipelineCreateInfo, Offset2D, PipelineCache, PipelineColorBlendAttachmentState, PipelineColorBlendStateCreateInfo, PipelineInputAssemblyStateCreateInfo, PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo, PipelineRasterizationStateCreateInfo, PipelineShaderStageCreateInfo, PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode, PrimitiveTopology, Rect2D, SampleCountFlags, VertexInputAttributeDescription, VertexInputBindingDescription, VertexInputRate, Viewport};
+use ash::vk::{
+    ColorComponentFlags, CullModeFlags, Extent2D, Format, FrontFace, GraphicsPipelineCreateInfo,
+    Offset2D, PipelineCache, PipelineColorBlendAttachmentState, PipelineColorBlendStateCreateInfo,
+    PipelineInputAssemblyStateCreateInfo, PipelineLayoutCreateInfo,
+    PipelineMultisampleStateCreateInfo, PipelineRasterizationStateCreateInfo,
+    PipelineShaderStageCreateInfo, PipelineVertexInputStateCreateInfo,
+    PipelineViewportStateCreateInfo, PolygonMode, PrimitiveTopology, Rect2D, SampleCountFlags,
+    VertexInputAttributeDescription, VertexInputBindingDescription, VertexInputRate, Viewport,
+};
 
 use crate::{Destroy, Device, Instance, RenderPass, ShaderStageDescriptor};
 
@@ -46,23 +54,23 @@ impl<'a> PipelineLayoutDescriptor<'a> {
 
 pub struct VertexInputBindingDescriptor {
     binding: u32,
-    stride: usize
+    stride: usize,
 }
 
 impl VertexInputBindingDescriptor {
     pub fn empty() -> Self {
         Self {
             binding: 0,
-            stride: 0
+            stride: 0,
         }
     }
 
-    pub fn binding(mut self,binding: u32) -> Self {
+    pub fn binding(mut self, binding: u32) -> Self {
         self.binding = binding;
         self
     }
 
-    pub fn stride(mut self,stride: usize) -> Self {
+    pub fn stride(mut self, stride: usize) -> Self {
         self.stride = stride;
         self
     }
@@ -71,7 +79,7 @@ impl VertexInputBindingDescriptor {
 pub struct VertexInputAttributeDescriptor {
     binding: u32,
     location: u32,
-    offset: usize
+    offset: usize,
 }
 
 impl VertexInputAttributeDescriptor {
@@ -79,21 +87,21 @@ impl VertexInputAttributeDescriptor {
         Self {
             binding: 0,
             location: 0,
-            offset: 0
+            offset: 0,
         }
     }
 
-    pub fn binding(mut self,binding: u32) -> Self {
+    pub fn binding(mut self, binding: u32) -> Self {
         self.binding = binding;
         self
     }
 
-    pub fn location(mut self,location: u32) -> Self {
+    pub fn location(mut self, location: u32) -> Self {
         self.location = location;
         self
     }
 
-    pub fn offset(mut self,offset: usize) -> Self {
+    pub fn offset(mut self, offset: usize) -> Self {
         self.offset = offset;
         self
     }
@@ -101,23 +109,23 @@ impl VertexInputAttributeDescriptor {
 
 pub struct PipelineVertexInputDescriptor<'a> {
     binding_desc: &'a [VertexInputBindingDescriptor],
-    attribute_desc: &'a [VertexInputAttributeDescriptor]
+    attribute_desc: &'a [VertexInputAttributeDescriptor],
 }
 
 impl<'a> PipelineVertexInputDescriptor<'a> {
     pub fn empty() -> Self {
         Self {
             binding_desc: &[],
-            attribute_desc: &[]
+            attribute_desc: &[],
         }
     }
 
-    pub fn binding_desc(mut self,binding_desc: &'a [VertexInputBindingDescriptor]) -> Self {
+    pub fn binding_desc(mut self, binding_desc: &'a [VertexInputBindingDescriptor]) -> Self {
         self.binding_desc = binding_desc;
         self
     }
 
-    pub fn attribute_desc(mut self,attribute_desc: &'a [VertexInputAttributeDescriptor]) -> Self {
+    pub fn attribute_desc(mut self, attribute_desc: &'a [VertexInputAttributeDescriptor]) -> Self {
         self.attribute_desc = attribute_desc;
         self
     }
@@ -129,7 +137,7 @@ pub struct PipelineDescriptor<'a> {
     max_depth: f32,
     min_depth: f32,
     shader_stages: &'a [ShaderStageDescriptor<'a>],
-    input_descriptor: Option<&'a PipelineVertexInputDescriptor<'a>>
+    input_descriptor: Option<&'a PipelineVertexInputDescriptor<'a>>,
 }
 
 impl<'a> PipelineDescriptor<'a> {
@@ -140,12 +148,15 @@ impl<'a> PipelineDescriptor<'a> {
             max_depth: 1.0,
             min_depth: 0.0,
             shader_stages: &[],
-            input_descriptor: None
+            input_descriptor: None,
         }
     }
 
     #[inline]
-    pub const fn input_descriptor(mut self,input_descriptor: &'a PipelineVertexInputDescriptor) -> Self {
+    pub const fn input_descriptor(
+        mut self,
+        input_descriptor: &'a PipelineVertexInputDescriptor,
+    ) -> Self {
         self.input_descriptor = Some(input_descriptor);
         self
     }
@@ -280,15 +291,30 @@ impl Pipeline {
             Some(desc) => {
                 let mut binding_desc = vec![];
                 for i in desc.binding_desc {
-                    binding_desc.push(VertexInputBindingDescription::builder().binding(i.binding).stride(i.stride as u32).input_rate(VertexInputRate::VERTEX).build());
+                    binding_desc.push(
+                        VertexInputBindingDescription::builder()
+                            .binding(i.binding)
+                            .stride(i.stride as u32)
+                            .input_rate(VertexInputRate::VERTEX)
+                            .build(),
+                    );
                 }
                 let mut attribute_desc = vec![];
                 for i in desc.attribute_desc {
-                    attribute_desc.push(VertexInputAttributeDescription::builder().binding(i.binding).offset(i.offset as u32).location(i.location).format(Format::R32G32_SFLOAT).build());
+                    attribute_desc.push(
+                        VertexInputAttributeDescription::builder()
+                            .binding(i.binding)
+                            .offset(i.offset as u32)
+                            .location(i.location)
+                            .format(Format::R32G32_SFLOAT)
+                            .build(),
+                    );
                 }
 
-                PipelineVertexInputStateCreateInfo::builder().vertex_attribute_descriptions(&attribute_desc).vertex_binding_descriptions(&binding_desc).build()
-
+                PipelineVertexInputStateCreateInfo::builder()
+                    .vertex_attribute_descriptions(&attribute_desc)
+                    .vertex_binding_descriptions(&binding_desc)
+                    .build()
             }
         };
 

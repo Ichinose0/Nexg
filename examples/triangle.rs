@@ -1,7 +1,15 @@
 use std::ffi::c_void;
 use std::{env, fs::File, io::BufWriter};
 
-use fgl::{Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, VertexInputAttributeDescriptor, VertexInputBindingDescriptor};
+use gallium::{
+    Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d,
+    FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor,
+    InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout,
+    PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor, RenderPass,
+    RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, ShaderStage,
+    ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor,
+    VertexInputAttributeDescriptor, VertexInputBindingDescriptor,
+};
 use png::text_metadata::ZTXtChunk;
 use simple_logger::SimpleLogger;
 #[derive(Clone, Copy, Debug)]
@@ -92,7 +100,6 @@ fn main() {
     vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void);
     vertex_buffer.lock(&device);
 
-    let _shaders = &[vertex, fragment];
     let desc = SubPassDescriptor::empty();
     let subpass = SubPass::new(connecter, &desc);
     let subpasses = &[subpass];
@@ -113,9 +120,16 @@ fn main() {
             .stage(ShaderStage::Fragment)
             .shaders(&fragment),
     ];
-    let binding_desc= vec![VertexInputBindingDescriptor::empty().binding(0).stride(std::mem::size_of::<Vertex>())];
-    let attribute_desc= vec![VertexInputAttributeDescriptor::empty().binding(0).location(0).offset(0)];
-    let vertex_input_desc = PipelineVertexInputDescriptor::empty().attribute_desc(&attribute_desc).binding_desc(&binding_desc);
+    let binding_desc = vec![VertexInputBindingDescriptor::empty()
+        .binding(0)
+        .stride(std::mem::size_of::<Vertex>())];
+    let attribute_desc = vec![VertexInputAttributeDescriptor::empty()
+        .binding(0)
+        .location(0)
+        .offset(0)];
+    let vertex_input_desc = PipelineVertexInputDescriptor::empty()
+        .attribute_desc(&attribute_desc)
+        .binding_desc(&binding_desc);
     let desc = PipelineDescriptor::empty()
         .shader_stages(&shader_stages)
         .input_descriptor(&vertex_input_desc)
@@ -137,9 +151,9 @@ fn main() {
         .render_pass(&render_pass)
         .frame_buffer(&framebuffer);
     recorders[0].begin(&device, begin_desc);
-    recorders[0].bind_pipeline(&device,&pipeline[0]);
-    recorders[0].bind_vertex_buffer(&device,&vertex_buffer);
-    recorders[0].draw( &device, 3, 1, 0, 0);
+    recorders[0].bind_pipeline(&device, &pipeline[0]);
+    recorders[0].bind_vertex_buffer(&device, &vertex_buffer);
+    recorders[0].draw(&device, 3, 1, 0, 0);
     recorders[0].end(&device);
 
     let desc = QueueSubmitDescriptor::empty();

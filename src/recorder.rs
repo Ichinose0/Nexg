@@ -130,7 +130,7 @@ impl CommandRecorder {
     }
 
     #[inline]
-    pub fn bind_pipeline(&self,device: &Device,pipeline: &Pipeline) {
+    pub fn bind_pipeline(&self, device: &Device, pipeline: &Pipeline) {
         unsafe {
             device.device.cmd_bind_pipeline(
                 self.buffer,
@@ -141,9 +141,11 @@ impl CommandRecorder {
     }
 
     #[inline]
-    pub fn bind_vertex_buffer(&self,device: &Device,buffer: &Buffer) {
+    pub fn bind_vertex_buffer(&self, device: &Device, buffer: &Buffer) {
         unsafe {
-            device.device.cmd_bind_vertex_buffers(self.buffer,0,&[buffer.buffer],&[0])
+            device
+                .device
+                .cmd_bind_vertex_buffers(self.buffer, 0, &[buffer.buffer], &[0])
         }
     }
 
