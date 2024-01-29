@@ -1,14 +1,7 @@
 use std::ffi::c_void;
 use std::{env, fs::File, io::BufWriter};
 
-use fgl::{
-    Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d,
-    FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor,
-    InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout,
-    PipelineLayoutDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor,
-    RenderPassDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp,
-    SubPass, SubPassDescriptor,
-};
+use fgl::{Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, VertexInputAttributeDescriptor, VertexInputBindingDescriptor};
 use png::text_metadata::ZTXtChunk;
 use simple_logger::SimpleLogger;
 #[derive(Clone, Copy, Debug)]
@@ -120,6 +113,9 @@ fn main() {
             .stage(ShaderStage::Fragment)
             .shaders(&fragment),
     ];
+    let binding_desc= vec![VertexInputBindingDescriptor::empty().binding(0).stride(std::mem::size_of::<Vertex>())];
+    let attribute_desc= vec![VertexInputAttributeDescriptor::empty().binding(0).location(0).offset(0)];
+    let vertex_input_desc = PipelineVertexInputDescriptor::empty().attribute_desc(&attribute_desc).binding_desc(&binding_desc);
     let desc = PipelineDescriptor::empty()
         .shader_stages(&shader_stages)
         .width(WIDTH)
