@@ -1,6 +1,14 @@
-use std::ffi::c_void;
-use gallium::{Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, Fence, FenceDescriptor, FrameBuffer, FrameBufferDescriptor, ImageViewDescriptor, InstanceBuilder, InstanceFeature, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueuePresentDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Semaphore, SemaphoreDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, SubPass, SubPassDescriptor, Surface, Swapchain, VertexInputAttributeDescriptor, VertexInputBindingDescriptor};
+use gallium::{
+    Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, Fence,
+    FenceDescriptor, FrameBuffer, FrameBufferDescriptor, ImageViewDescriptor, InstanceBuilder,
+    InstanceFeature, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor,
+    PipelineVertexInputDescriptor, QueuePresentDescriptor, QueueSubmitDescriptor, RenderPass,
+    RenderPassBeginDescriptor, RenderPassDescriptor, Semaphore, SemaphoreDescriptor, Shader,
+    ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, SubPass, SubPassDescriptor, Surface,
+    Swapchain, VertexInputAttributeDescriptor, VertexInputBindingDescriptor,
+};
 use simple_logger::SimpleLogger;
+use std::ffi::c_void;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::EventLoop,
@@ -108,7 +116,7 @@ fn main() {
     vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void);
     vertex_buffer.lock(&device);
 
-    let shaders = vec![fragment,vertex];
+    let shaders = vec![fragment, vertex];
     let desc = SubPassDescriptor::empty();
     let subpass = SubPass::new(connecter, &desc);
     let subpasses = &[subpass];

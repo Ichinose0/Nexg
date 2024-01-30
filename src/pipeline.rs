@@ -76,10 +76,28 @@ impl VertexInputBindingDescriptor {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DataFormat {
+    R32G32SFloat,
+    R32G32B32SFloat,
+    R32G32B32A32SFloat
+}
+
+impl Into<Format> for DataFormat {
+    fn into(self) -> Format {
+        match self {
+            DataFormat::R32G32SFloat => Format::R32G32_SFLOAT,
+            DataFormat::R32G32B32SFloat => Format::R32G32B32_SFLOAT,
+            DataFormat::R32G32B32A32SFloat => Format::R32G32B32A32_SFLOAT,
+        }
+    }
+}
+
 pub struct VertexInputAttributeDescriptor {
     binding: u32,
     location: u32,
     offset: usize,
+    format: DataFormat
 }
 
 impl VertexInputAttributeDescriptor {
@@ -88,6 +106,7 @@ impl VertexInputAttributeDescriptor {
             binding: 0,
             location: 0,
             offset: 0,
+            format: DataFormat::R32G32SFloat
         }
     }
 
@@ -103,6 +122,11 @@ impl VertexInputAttributeDescriptor {
 
     pub fn offset(mut self, offset: usize) -> Self {
         self.offset = offset;
+        self
+    }
+
+    pub fn format(mut self,format: DataFormat) -> Self {
+        self.format = format;
         self
     }
 }
@@ -306,7 +330,7 @@ impl Pipeline {
                             .binding(i.binding)
                             .offset(i.offset as u32)
                             .location(i.location)
-                            .format(Format::R32G32_SFLOAT)
+                            .format(i.format.into())
                             .build(),
                     );
                 }
