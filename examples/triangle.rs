@@ -2,7 +2,15 @@ use std::ffi::c_void;
 use std::mem::offset_of;
 use std::{env, fs::File, io::BufWriter};
 
-use gallium::{Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, VertexInputAttributeDescriptor, VertexInputBindingDescriptor};
+use nexg::{
+    Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat,
+    Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat,
+    ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor,
+    PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor,
+    RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, ShaderStage,
+    ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor,
+    VertexInputAttributeDescriptor, VertexInputBindingDescriptor,
+};
 use png::text_metadata::ZTXtChunk;
 use simple_logger::SimpleLogger;
 

@@ -80,7 +80,7 @@ impl VertexInputBindingDescriptor {
 pub enum DataFormat {
     R32G32SFloat,
     R32G32B32SFloat,
-    R32G32B32A32SFloat
+    R32G32B32A32SFloat,
 }
 
 impl Into<Format> for DataFormat {
@@ -97,7 +97,7 @@ pub struct VertexInputAttributeDescriptor {
     binding: u32,
     location: u32,
     offset: usize,
-    format: DataFormat
+    format: DataFormat,
 }
 
 impl VertexInputAttributeDescriptor {
@@ -106,7 +106,7 @@ impl VertexInputAttributeDescriptor {
             binding: 0,
             location: 0,
             offset: 0,
-            format: DataFormat::R32G32SFloat
+            format: DataFormat::R32G32SFloat,
         }
     }
 
@@ -125,7 +125,7 @@ impl VertexInputAttributeDescriptor {
         self
     }
 
-    pub fn format(mut self,format: DataFormat) -> Self {
+    pub fn format(mut self, format: DataFormat) -> Self {
         self.format = format;
         self
     }

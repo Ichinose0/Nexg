@@ -1,46 +1,47 @@
-use gallium::{
-    Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, Fence,
+use nexg::{
+    Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat, Fence,
     FenceDescriptor, FrameBuffer, FrameBufferDescriptor, ImageViewDescriptor, InstanceBuilder,
-    InstanceFeature, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor,
-    PipelineVertexInputDescriptor, QueuePresentDescriptor, QueueSubmitDescriptor, RenderPass,
-    RenderPassBeginDescriptor, RenderPassDescriptor, Semaphore, SemaphoreDescriptor, Shader,
-    ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, SubPass, SubPassDescriptor, Surface,
-    Swapchain, VertexInputAttributeDescriptor, VertexInputBindingDescriptor,
+    InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout,
+    PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueuePresentDescriptor,
+    QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Semaphore,
+    SemaphoreDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp,
+    SubPass, SubPassDescriptor, Surface, Swapchain, VertexInputAttributeDescriptor,
+    VertexInputBindingDescriptor,
 };
 use simple_logger::SimpleLogger;
 use std::ffi::c_void;
+use std::mem::offset_of;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::EventLoop,
     window::WindowBuilder,
 };
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct Vec4(f32, f32, f32, f32);
+#[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct Vertex {
-    x: f32,
-    y: f32,
-    z: f32,
-    w: f32,
+    pos: Vec4,
+    color: Vec4,
 }
+
+const WIDTH: u32 = 640;
+const HEIGHT: u32 = 480;
 
 const VERTEX: [Vertex; 3] = [
     Vertex {
-        x: 0.0,
-        y: -0.5,
-        z: 0.0,
-        w: 0.0,
+        pos: Vec4(0.0, -0.5, 0.0, 0.0),
+        color: Vec4(1.0, 0.0, 0.0, 1.0),
     },
     Vertex {
-        x: 0.5,
-        y: 0.5,
-        z: 0.0,
-        w: 0.0,
+        pos: Vec4(0.5, 0.5, 0.0, 0.0),
+        color: Vec4(0.0, 1.0, 0.0, 1.0),
     },
     Vertex {
-        x: -0.5,
-        y: 0.5,
-        z: 0.0,
-        w: 0.0,
+        pos: Vec4(-0.5, 0.5, 0.0, 0.0),
+        color: Vec4(0.0, 0.0, 1.0, 1.0),
     },
 ];
 
@@ -116,11 +117,13 @@ fn main() {
     vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void);
     vertex_buffer.lock(&device);
 
-    let shaders = vec![fragment, vertex];
     let desc = SubPassDescriptor::empty();
     let subpass = SubPass::new(connecter, &desc);
     let subpasses = &[subpass];
-    let desc = RenderPassDescriptor::empty().subpasses(subpasses);
+    let desc = RenderPassDescriptor::empty()
+        .subpasses(subpasses)
+        .load_op(LoadOp::Clear)
+        .store_op(StoreOp::Store);
     let render_pass = RenderPass::new(&device, &desc);
     let desc = PipelineLayoutDescriptor::empty().render_pass(&render_pass);
     let pipeline_layout = PipelineLayout::new(&device, &desc);
@@ -137,10 +140,18 @@ fn main() {
     let binding_desc = vec![VertexInputBindingDescriptor::empty()
         .binding(0)
         .stride(std::mem::size_of::<Vertex>())];
-    let attribute_desc = vec![VertexInputAttributeDescriptor::empty()
-        .binding(0)
-        .location(0)
-        .offset(0)];
+    let attribute_desc = vec![
+        VertexInputAttributeDescriptor::empty()
+            .binding(0)
+            .location(0)
+            .format(DataFormat::R32G32SFloat)
+            .offset(offset_of!(Vertex, pos)),
+        VertexInputAttributeDescriptor::empty()
+            .binding(0)
+            .location(1)
+            .format(DataFormat::R32G32B32SFloat)
+            .offset(offset_of!(Vertex, color)),
+    ];
     let vertex_input_desc = PipelineVertexInputDescriptor::empty()
         .attribute_desc(&attribute_desc)
         .binding_desc(&binding_desc);
