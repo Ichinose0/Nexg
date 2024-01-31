@@ -1,4 +1,4 @@
-# Gallium - Low-level fast GPU Api
+# Nexg(Next GPU) - Low-level fast GPU Api
 ![GitHub License](https://img.shields.io/github/license/Ichinose0/Gallium)
 ![GitHub top language](https://img.shields.io/github/languages/top/Ichinose0/Gallium?logo=rust&logoColor=white&label=Rust&color=rgb(255%2C60%2C60))
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Ichinose0/Gallium)
