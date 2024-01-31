@@ -140,6 +140,7 @@ pub struct Image {
 
 impl Image {
     pub fn create(
+        instance: &Instance,
         device: &Device,
         connecter: DeviceConnecter,
         descriptor: &ImageDescriptor,
@@ -157,7 +158,7 @@ impl Image {
             .samples(SampleCountFlags::TYPE_1)
             .build();
         let image = unsafe { device.device.create_image(&create_info, None) }.unwrap();
-        let mem_props = connecter.get_memory_properties();
+        let mem_props = connecter.get_memory_properties(instance);
         let mem_req = unsafe { device.device.get_image_memory_requirements(image) };
 
         let memory = DeviceMemory::alloc_image_memory(&device.device, image, mem_props, mem_req);

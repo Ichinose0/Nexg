@@ -50,7 +50,7 @@ fn main() {
     let mut index = 0;
     let mut found_device = false;
     for i in &connecters {
-        let properties = i.get_queue_family_properties();
+        let properties = i.get_queue_family_properties(&instance);
         for i in properties {
             if i.is_graphic_support() {
                 index = 0;
@@ -65,7 +65,7 @@ fn main() {
 
     let connecter = connecters[index];
 
-    let device = connecter.create_device(index);
+    let device = connecter.create_device(&instance, index);
 
     let queue = device.get_queue(index);
     let desc = CommandPoolDescriptor::empty().queue_family_index(index);

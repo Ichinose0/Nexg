@@ -47,14 +47,19 @@ pub struct Buffer {
 }
 
 impl Buffer {
-    pub fn new(connecter: DeviceConnecter, device: &Device, descriptor: &BufferDescriptor) -> Self {
+    pub fn new(
+        instance: &Instance,
+        connecter: DeviceConnecter,
+        device: &Device,
+        descriptor: &BufferDescriptor,
+    ) -> Self {
         let create_info = BufferCreateInfo::builder()
             .size(descriptor.size as u64)
             .usage(descriptor.usage.into())
             .sharing_mode(SharingMode::EXCLUSIVE)
             .build();
         let buffer = unsafe { device.device.create_buffer(&create_info, None) }.unwrap();
-        let mem_props = connecter.get_memory_properties();
+        let mem_props = connecter.get_memory_properties(instance);
         let mem_req = unsafe { device.device.get_buffer_memory_requirements(buffer) };
         let memory = DeviceMemory::alloc_buffer_memory(&device.device, buffer, mem_props, mem_req);
 

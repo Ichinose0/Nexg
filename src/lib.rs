@@ -69,12 +69,11 @@ impl QueueFamilyProperties {
 }
 
 #[derive(Clone, Copy)]
-pub struct DeviceConnecter<'a>(pub(crate) vk::PhysicalDevice, &'a Instance);
+pub struct DeviceConnecter(pub(crate) vk::PhysicalDevice);
 
-impl<'a> DeviceConnecter<'a> {
-    pub fn create_device(self, queue_family_index: usize) -> Device {
-        let extensions = &self
-            .1
+impl DeviceConnecter {
+    pub fn create_device(self, instance: &Instance, queue_family_index: usize) -> Device {
+        let extensions = &instance
             .device_exts
             .iter()
             .map(|x| match x {
@@ -89,24 +88,27 @@ impl<'a> DeviceConnecter<'a> {
             .queue_create_infos(&queue_infos)
             .enabled_extension_names(&extensions)
             .build();
-        let device = self.1.create_device(self, &create_info);
+        let device = instance.create_device(self, &create_info);
         device
     }
 
-    pub fn get_queue_family_properties(&self) -> Vec<QueueFamilyProperties> {
-        self.1.get_queue_family_properties(self.0)
+    pub fn get_queue_family_properties(&self, instance: &Instance) -> Vec<QueueFamilyProperties> {
+        instance.get_queue_family_properties(self.0)
     }
 
     #[doc(hidden)]
-    pub(crate) fn get_memory_properties(&self) -> vk::PhysicalDeviceMemoryProperties {
-        self.1.get_memory_properties(self.0)
+    pub(crate) fn get_memory_properties(
+        &self,
+        instance: &Instance,
+    ) -> vk::PhysicalDeviceMemoryProperties {
+        instance.get_memory_properties(self.0)
     }
 
     #[doc(hidden)]
     #[cfg(feature = "window")]
-    pub(crate) fn is_support_swapchain(&self) -> bool {
+    pub(crate) fn is_support_swapchain(&self, instance: &Instance) -> bool {
         let features = unsafe {
-            self.1
+            instance
                 .instance
                 .enumerate_device_extension_properties(self.0)
         }

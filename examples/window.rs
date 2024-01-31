@@ -64,7 +64,7 @@ fn main() {
     let mut index = 0;
     let mut found_device = false;
     for i in &connecters {
-        let properties = i.get_queue_family_properties();
+        let properties = i.get_queue_family_properties(&instance);
         for i in properties {
             if i.is_graphic_support() {
                 index = 0;
@@ -79,7 +79,7 @@ fn main() {
 
     let connecter = connecters[index];
 
-    let device = connecter.create_device(index);
+    let device = connecter.create_device(&instance, index);
 
     let surface = Surface::new(&instance, &window);
     let swapchain = Swapchain::new(&surface, &instance, &device, connecter);
@@ -113,7 +113,7 @@ fn main() {
     );
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
-    let vertex_buffer = Buffer::new(connecter, &device, &desc);
+    let vertex_buffer = Buffer::new(&instance, connecter, &device, &desc);
     vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void);
     vertex_buffer.lock(&device);
 

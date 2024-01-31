@@ -26,7 +26,7 @@ impl Swapchain {
         device: &Device,
         connecter: DeviceConnecter,
     ) -> Self {
-        if !connecter.is_support_swapchain() {
+        if !connecter.is_support_swapchain(&instance) {
             panic!("This DeviceConnecter does not support Swapchain");
         }
 

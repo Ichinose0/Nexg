@@ -130,7 +130,7 @@ impl Instance {
         let devices = unsafe { self.instance.enumerate_physical_devices() }.unwrap();
         let devices = devices
             .iter()
-            .map(|x| DeviceConnecter(*x, &self))
+            .map(|x| DeviceConnecter(*x))
             .collect::<Vec<DeviceConnecter>>();
         devices
     }
