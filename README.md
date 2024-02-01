@@ -1,11 +1,19 @@
-# Nexg(Next GPU) - Low-level fast GPU Api
-![GitHub License](https://img.shields.io/github/license/Ichinose0/Gallium)
-![GitHub top language](https://img.shields.io/github/languages/top/Ichinose0/Gallium?logo=rust&logoColor=white&label=Rust&color=rgb(255%2C60%2C60))
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Ichinose0/Gallium)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Ichinose0/Gallium/rust.yml)  
-Gallium is a pure-rust library that makes coding Vulkan functionality easier and more Rust-like  
+<div align="center">
 
-Gallium aims to support gaming applications as well as operation on GPUs  
+# Nexg(Next GPU)
+
+## **Low-level fast GPU Api**  
+
+![GitHub License](https://img.shields.io/github/license/Ichinose0/Nexg)
+![GitHub top language](https://img.shields.io/github/languages/top/Ichinose0/Gallium?logo=rust&logoColor=white&label=Rust&color=rgb(255%2C60%2C60))
+[![dependency status](https://deps.rs/repo/github/linebender/vello/status.svg)](https://deps.rs/repo/github/Ichinose0/Nexg)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Ichinose0/Nexg)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Ichinose0/Nexg/rust.yml)  
+</div>
+
+Nexg is a pure-rust library that makes coding Vulkan functionality easier and more Rust-like  
+
+Nexg aims to support gaming applications as well as operation on GPUs  
 
 # Examples
 ### Triangle
