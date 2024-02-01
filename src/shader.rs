@@ -5,7 +5,7 @@ use ash::{
 };
 use std::io::{Cursor, Read};
 
-use crate::{Destroy, Device, Instance};
+use crate::{Destroy, Device, Instance, NxError, NxResult};
 
 ///Indicates shader type
 ///
@@ -41,14 +41,20 @@ impl Spirv {
     /// # Arguments
     ///
     /// * `file` - Spv file path.
-    pub fn new(file: &str) -> Self {
+    pub fn new(file: &str) -> NxResult<Self> {
         let mut file = std::fs::File::open(file).expect("file open failed");
         let mut buf = Vec::new();
-        file.read_to_end(&mut buf).expect("file read failed");
+        match file.read_to_end(&mut buf) {
+            Ok(_) => {}
+            Err(e) => Err(NxError::IoError(e))
+        }
         let mut spirv_file = Cursor::new(&buf);
-        let spirv = read_spv(&mut spirv_file).unwrap();
+        let spirv = match read_spv(&mut spirv_file) {
+            Ok(x) => x,
+            Err(e) => Err(NxError::SpvError(e))
+        };
 
-        Self { data: spirv }
+        Ok(Self { data: spirv })
     }
 }
 

@@ -1,6 +1,6 @@
 use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 
-use crate::Instance;
+use crate::{Instance, NxResult};
 
 pub struct Surface {
     pub(crate) surface: ash::extensions::khr::Surface,
@@ -11,7 +11,7 @@ impl Surface {
     pub fn new(
         instance: &Instance,
         handle: &(impl HasRawWindowHandle + HasRawDisplayHandle),
-    ) -> Self {
+    ) -> NxResult<Self> {
         let surface = ash::extensions::khr::Surface::new(&instance.entry, &instance.instance);
         let khr = unsafe {
             ash_window::create_surface(
@@ -23,7 +23,7 @@ impl Surface {
             )
         }
         .unwrap();
-        Self { surface, khr }
+        Ok(Self { surface, khr })
     }
 }
 

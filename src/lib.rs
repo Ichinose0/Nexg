@@ -43,6 +43,24 @@ pub use surface::*;
 pub use swapchain::*;
 pub use sync::*;
 
+use thiserror::Error;
+
+pub type NxResult<T> = std::result::Result<T, NxError>;
+
+#[derive(Debug)]
+#[derive(Debug, Error)]
+enum NxError {
+    #[error("Nothing of value could be obtained.")]
+    NoValue,
+    #[error("Device does not support this operation.")]
+    DeviceError,
+    IoError(#[from] std::io::Error),
+    SurfaceError(#[from] ash::vk::Result),
+    SwapchainError(#[from] ash::vk::Result),
+    SpvError(#[from] dyn std::error::Error)
+
+}
+
 pub struct QueueFamilyProperties {
     graphic_support: bool,
     compute_support: bool,
