@@ -1,6 +1,6 @@
 use std::os::raw::c_void;
 
-use crate::{Destroy, Device, DeviceConnecter, DeviceMemory, Extent3d, Instance};
+use crate::{Destroy, Device, DeviceConnecter, DeviceMemory, Extent3d, Instance, NxResult};
 use ash::vk::{
     ComponentMapping, ComponentSwizzle, Format, ImageAspectFlags, ImageCreateInfo, ImageLayout,
     ImageSubresourceRange, ImageTiling, ImageUsageFlags, ImageViewCreateInfo, ImageViewType,
@@ -144,7 +144,7 @@ impl Image {
         device: &Device,
         connecter: DeviceConnecter,
         descriptor: &ImageDescriptor,
-    ) -> Self {
+    ) -> NxResult<Self> {
         let create_info = ImageCreateInfo::builder()
             .image_type(descriptor.image_type.into())
             .extent(descriptor.extent.into())
@@ -161,12 +161,17 @@ impl Image {
         let mem_props = connecter.get_memory_properties(instance);
         let mem_req = unsafe { device.device.get_image_memory_requirements(image) };
 
-        let memory = DeviceMemory::alloc_image_memory(&device.device, image, mem_props, mem_req);
-        Self {
+        let memory = match DeviceMemory::alloc_image_memory(&device.device, image, mem_props, mem_req) {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(e)
+            }
+        };
+        Ok(Self {
             image,
             size: Some(mem_req.size),
             memory: Some(memory),
-        }
+        })
     }
 
     pub fn map_memory(&self, device: &Device) -> *mut c_void {

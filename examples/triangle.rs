@@ -45,12 +45,12 @@ const VERTEX: [Vertex; 3] = [
 fn main() {
     SimpleLogger::new().init().unwrap();
     let feature = InstanceFeature::empty();
-    let instance = InstanceBuilder::new().feature(feature).build();
-    let connecters = instance.enumerate_connecters();
+    let instance = InstanceBuilder::new().feature(feature).build().unwrap();
+    let connecters = instance.enumerate_connecters().unwrap();
     let mut index = 0;
     let mut found_device = false;
     for i in &connecters {
-        let properties = i.get_queue_family_properties(&instance);
+        let properties = i.get_queue_family_properties(&instance).unwrap();
         for i in properties {
             if i.is_graphic_support() {
                 index = 0;
@@ -65,7 +65,7 @@ fn main() {
 
     let connecter = connecters[index];
 
-    let device = connecter.create_device(&instance, index);
+    let device = connecter.create_device(&instance, index).unwrap();
 
     let queue = device.get_queue(index);
     let desc = CommandPoolDescriptor::empty().queue_family_index(index);
@@ -73,7 +73,7 @@ fn main() {
     let desc = CommandRecorderDescriptor::empty();
     let recorders = device.allocate_command_recorder(pool, &desc);
     let desc = ImageDescriptor::new().extent(Extent3d::new(WIDTH, HEIGHT, 1));
-    let image = Image::create(&device, connecter, &desc);
+    let image = Image::create(&instance,&device, connecter, &desc).unwrap();
     let desc = ImageViewDescriptor::empty().format(ImageFormat::R8G8B8A8Unorm);
     let image_view = image.create_image_view(&device, &desc);
 
@@ -82,7 +82,7 @@ fn main() {
         Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.vert.spv"
-        )),
+        )).unwrap(),
     );
 
     let fragment = Shader::new(
@@ -90,11 +90,11 @@ fn main() {
         Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.frag.spv"
-        )),
+        )).unwrap(),
     );
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
-    let vertex_buffer = Buffer::new(connecter, &device, &desc);
+    let vertex_buffer = Buffer::new(&instance,connecter, &device, &desc).unwrap();
     vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void);
     vertex_buffer.lock(&device);
 

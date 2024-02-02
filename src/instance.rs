@@ -1,3 +1,4 @@
+use crate::{NxError,NxResult};
 use ash::extensions::ext::DebugUtils;
 use ash::vk::{
     self, DebugUtilsMessengerEXT, DeviceCreateInfo, PhysicalDevice, PhysicalDeviceMemoryProperties,
@@ -26,12 +27,18 @@ impl InstanceFeature {
     /// "window" feature is required.
     #[cfg(feature = "window")]
     #[inline]
-    pub fn use_surface(&mut self, handle: &impl raw_window_handle::HasRawDisplayHandle) {
-        let ext = ash_window::enumerate_required_extensions(handle.raw_display_handle()).unwrap();
+    pub fn use_surface(&mut self, handle: &impl raw_window_handle::HasRawDisplayHandle) -> NxResult<()> {
+        let ext = match ash_window::enumerate_required_extensions(handle.raw_display_handle()) {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(NxError::InternalError(e))
+            }
+        };
         for i in ext {
             self.extensions.push(*i);
         }
         self.device_exts.push(DeviceFeature::Swapchain);
+        Ok(())
     }
 }
 
@@ -57,13 +64,18 @@ impl InstanceBuilder {
         self
     }
 
-    pub fn build(mut self) -> Instance {
+    pub fn build(mut self) -> NxResult<Instance> {
         self.feature.extensions.push(DebugUtils::name().as_ptr());
         let entry = Entry::linked();
         let create_info = InstanceCreateInfo::builder()
             .enabled_extension_names(&self.feature.extensions)
             .build();
-        let instance = unsafe { entry.create_instance(&create_info, None) }.unwrap();
+        let instance = match unsafe { entry.create_instance(&create_info, None) } {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(NxError::InternalError(e))
+            }
+        };
         let mut debug_info = vk::DebugUtilsMessengerCreateInfoEXT::default();
 
         debug_info.message_severity = vk::DebugUtilsMessageSeverityFlagsEXT::ERROR
@@ -77,14 +89,19 @@ impl InstanceBuilder {
 
         let debug_utils = DebugUtils::new(&entry, &instance);
         let debug_call_back =
-            unsafe { debug_utils.create_debug_utils_messenger(&debug_info, None) }.unwrap();
-        Instance {
+            match unsafe { debug_utils.create_debug_utils_messenger(&debug_info, None) } {
+                Ok(x) => x,
+                Err(e) => {
+                    return Err(NxError::InternalError(e))
+                }
+            };
+        Ok(Instance {
             instance,
             entry,
             device_exts: self.feature.device_exts,
             debug_utils,
             debug_call_back,
-        }
+        })
     }
 }
 
@@ -126,18 +143,27 @@ impl Instance {
     ///     let connecter = connecters[index];
     /// }
     ///```
-    pub fn enumerate_connecters(&self) -> Vec<DeviceConnecter> {
-        let devices = unsafe { self.instance.enumerate_physical_devices() }.unwrap();
+    pub fn enumerate_connecters(&self) -> NxResult<Vec<DeviceConnecter>> {
+        let devices = match unsafe { self.instance.enumerate_physical_devices() } {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(NxError::InternalError(e))
+            }
+        };
         let devices = devices
             .iter()
             .map(|x| DeviceConnecter(*x))
             .collect::<Vec<DeviceConnecter>>();
-        devices
+        if devices.len() != 0 {
+            Ok(devices)
+        } else {
+            Err(NxError::NoValue)
+        }
     }
 
     /// Get the first connector.
     pub fn default_connector(&self) -> DeviceConnecter {
-        let devices = self.enumerate_connecters();
+        let devices = self.enumerate_connecters().unwrap();
         devices[0]
     }
 
@@ -162,24 +188,34 @@ impl Instance {
         &self,
         connecter: DeviceConnecter,
         info: &DeviceCreateInfo,
-    ) -> Device {
-        let device = unsafe { self.instance.create_device(connecter.0, info, None) }.unwrap();
-        Device::from(device)
+    ) -> NxResult<Device> {
+        let device = match unsafe { self.instance.create_device(connecter.0, info, None) } {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(NxError::InternalError(e))
+            }
+        };
+        Ok(Device::from(device))
     }
 
     #[doc(hidden)]
     pub(crate) fn get_queue_family_properties(
         &self,
         physical_device: PhysicalDevice,
-    ) -> Vec<crate::QueueFamilyProperties> {
+    ) -> NxResult<Vec<crate::QueueFamilyProperties>> {
         let props = unsafe {
             self.instance
                 .get_physical_device_queue_family_properties(physical_device)
         };
-        props
+        let props = props
             .iter()
             .map(|x| crate::QueueFamilyProperties::from(*x))
-            .collect::<Vec<crate::QueueFamilyProperties>>()
+            .collect::<Vec<crate::QueueFamilyProperties>>();
+        if props.len() != 0 {
+            Ok(props)
+        } else {
+            Err(NxError::NoValue)
+        }
     }
 
     #[doc(hidden)]

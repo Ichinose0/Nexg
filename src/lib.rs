@@ -43,6 +43,28 @@ pub use surface::*;
 pub use swapchain::*;
 pub use sync::*;
 
+use thiserror::Error;
+
+pub type NxResult<T> = std::result::Result<T, NxError>;
+
+#[derive(Debug, Error)]
+pub enum NxError {
+    #[error("Unknown error")]
+    Unknown,
+    #[error("Nothing of value could be obtained.")]
+    NoValue,
+    #[error("Device does not support this operation.")]
+    HardwareError,
+    #[error("Out of host memory")]
+    OutOfHostMemory,
+    #[error("Out of device memory")]
+    OutOfDeviceMemory,
+    #[error("`{0}`")]
+    InternalError(#[from] ash::vk::Result),
+    #[error("`{0}`")]
+    IoError(String)
+}
+
 pub struct QueueFamilyProperties {
     graphic_support: bool,
     compute_support: bool,
@@ -72,7 +94,7 @@ impl QueueFamilyProperties {
 pub struct DeviceConnecter(pub(crate) vk::PhysicalDevice);
 
 impl DeviceConnecter {
-    pub fn create_device(self, instance: &Instance, queue_family_index: usize) -> Device {
+    pub fn create_device(self, instance: &Instance, queue_family_index: usize) -> NxResult<Device> {
         let extensions = &instance
             .device_exts
             .iter()
@@ -88,11 +110,10 @@ impl DeviceConnecter {
             .queue_create_infos(&queue_infos)
             .enabled_extension_names(&extensions)
             .build();
-        let device = instance.create_device(self, &create_info);
-        device
+        instance.create_device(self, &create_info)
     }
 
-    pub fn get_queue_family_properties(&self, instance: &Instance) -> Vec<QueueFamilyProperties> {
+    pub fn get_queue_family_properties(&self, instance: &Instance) -> NxResult<Vec<QueueFamilyProperties>> {
         instance.get_queue_family_properties(self.0)
     }
 

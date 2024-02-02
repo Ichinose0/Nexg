@@ -1,10 +1,9 @@
+use ash::prelude::VkResult;
 use ash::vk::{
     ImageUsageFlags, PresentInfoKHR, Semaphore, SharingMode, SwapchainCreateInfoKHR, SwapchainKHR,
 };
 
-use crate::{
-    Device, DeviceConnecter, Image, ImageFormat, Instance, QueuePresentDescriptor, Surface,
-};
+use crate::{Device, DeviceConnecter, Image, ImageFormat, Instance, NxError, NxResult, QueuePresentDescriptor, Surface};
 
 #[derive(Clone, Copy, Debug)]
 pub enum SwapchainState {
@@ -25,9 +24,9 @@ impl Swapchain {
         instance: &Instance,
         device: &Device,
         connecter: DeviceConnecter,
-    ) -> Self {
+    ) -> NxResult<Self> {
         if !connecter.is_support_swapchain(&instance) {
-            panic!("This DeviceConnecter does not support Swapchain");
+            return Err(NxError::HardwareError);
         }
 
         let surface_capabilities = connecter.get_surface_capabilities(surface);
@@ -51,19 +50,24 @@ impl Swapchain {
             .clipped(true)
             .build();
         let swapchain = ash::extensions::khr::Swapchain::new(&instance.instance, &device.device);
-        let khr = unsafe { swapchain.create_swapchain(&create_info, None) }.unwrap();
+        let khr = match unsafe { swapchain.create_swapchain(&create_info, None) } {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(NxError::InternalError(e))
+            }
+        };
         let format = format.format.into();
-        Self {
+        Ok(Self {
             swapchain,
             khr,
             format,
-        }
+        })
     }
 
     pub fn acquire_next_image(
         &self,
         semaphore: Option<&crate::Semaphore>,
-    ) -> (usize, SwapchainState) {
+    ) -> NxResult<(usize, SwapchainState)> {
         let semaphore = match semaphore {
             None => Semaphore::null(),
             Some(x) => x.semaphore,
@@ -83,10 +87,12 @@ impl Swapchain {
                 } else {
                     SwapchainState::Normal
                 };
-                (image, state)
+                Ok((image, state))
             }
 
-            Err(_e) => panic!("Can't get next image"),
+            Err(e) => {
+                return Err(NxError::InternalError(e))
+            },
         }
     }
 
@@ -94,7 +100,7 @@ impl Swapchain {
         self.format
     }
 
-    pub fn present(&self, descriptor: &QueuePresentDescriptor, image: u32) {
+    pub fn present(&self, descriptor: &QueuePresentDescriptor, image: u32) -> NxResult<()> {
         let w_semaphores: Vec<Semaphore> = descriptor
             .wait_semaphores
             .iter()
@@ -106,18 +112,28 @@ impl Swapchain {
             .wait_semaphores(&w_semaphores)
             .build();
 
-        unsafe {
+        match unsafe {
             self.swapchain
-                .queue_present(descriptor.queue.unwrap().0, &present_info);
+                .queue_present(descriptor.queue.unwrap().0, &present_info)
+        } {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                return Err(NxError::InternalError(e))
+            }
         }
     }
 
-    pub fn images(&self) -> Vec<Image> {
+    pub fn images(&self) -> NxResult<Vec<Image>> {
         let images = unsafe { self.swapchain.get_swapchain_images(self.khr).unwrap() };
-        images
+        let images = images
             .iter()
             .map(|x| Image::from_raw(*x))
-            .collect::<Vec<Image>>()
+            .collect::<Vec<Image>>();
+        if images.len() != 0 {
+            Ok(images)
+        } else {
+            Err(NxError::NoValue)
+        }
     }
 }
 

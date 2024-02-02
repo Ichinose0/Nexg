@@ -1,5 +1,5 @@
 use crate::mem::DeviceMemory;
-use crate::{Device, DeviceConnecter, Instance};
+use crate::{Device, DeviceConnecter, Instance, NxResult};
 use ash::vk::{BufferCreateInfo, BufferUsageFlags, MappedMemoryRange, MemoryMapFlags, SharingMode};
 use std::ffi::c_void;
 
@@ -52,7 +52,7 @@ impl Buffer {
         connecter: DeviceConnecter,
         device: &Device,
         descriptor: &BufferDescriptor,
-    ) -> Self {
+    ) -> NxResult<Self> {
         let create_info = BufferCreateInfo::builder()
             .size(descriptor.size as u64)
             .usage(descriptor.usage.into())
@@ -61,13 +61,16 @@ impl Buffer {
         let buffer = unsafe { device.device.create_buffer(&create_info, None) }.unwrap();
         let mem_props = connecter.get_memory_properties(instance);
         let mem_req = unsafe { device.device.get_buffer_memory_requirements(buffer) };
-        let memory = DeviceMemory::alloc_buffer_memory(&device.device, buffer, mem_props, mem_req);
+        let memory = match DeviceMemory::alloc_buffer_memory(&device.device, buffer, mem_props, mem_req) {
+            Ok(x) => x,
+            Err(e) => return Err(e)
+        };
 
-        Self {
+        Ok(Self {
             buffer,
             memory,
             size: descriptor.size,
-        }
+        })
     }
 
     pub fn write(&self, device: &Device, data: *const c_void) {
