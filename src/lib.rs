@@ -47,20 +47,22 @@ use thiserror::Error;
 
 pub type NxResult<T> = std::result::Result<T, NxError>;
 
-#[derive(Debug)]
 #[derive(Debug, Error)]
-enum NxError {
+pub enum NxError {
+    #[error("Unknown error")]
+    Unknown,
     #[error("Nothing of value could be obtained.")]
     NoValue,
     #[error("Device does not support this operation.")]
     HardwareError,
-    InstanceError(#[from] ash::vk::Result),
-    DeviceError(#[from] ash::vk::Result),
-    IoError(#[from] std::io::Error),
-    SurfaceError(#[from] ash::vk::Result),
-    SwapchainError(#[from] ash::vk::Result),
-    SpvError(#[from] dyn std::error::Error)
-
+    #[error("Out of host memory")]
+    OutOfHostMemory,
+    #[error("Out of device memory")]
+    OutOfDeviceMemory,
+    #[error("`{0}`")]
+    InternalError(#[from] ash::vk::Result),
+    #[error("`{0}`")]
+    IoError(String)
 }
 
 pub struct QueueFamilyProperties {

@@ -52,7 +52,9 @@ impl Swapchain {
         let swapchain = ash::extensions::khr::Swapchain::new(&instance.instance, &device.device);
         let khr = match unsafe { swapchain.create_swapchain(&create_info, None) } {
             Ok(x) => x,
-            Err(e) => Err(NxError::SwapchainError(e))
+            Err(e) => {
+                return Err(NxError::InternalError(e))
+            }
         };
         let format = format.format.into();
         Ok(Self {
@@ -88,7 +90,9 @@ impl Swapchain {
                 Ok((image, state))
             }
 
-            Err(e) => Err(NxError::SwapchainError(e)),
+            Err(e) => {
+                return Err(NxError::InternalError(e))
+            },
         }
     }
 
@@ -113,7 +117,9 @@ impl Swapchain {
                 .queue_present(descriptor.queue.unwrap().0, &present_info)
         } {
             Ok(_) => Ok(()),
-            Err(e) => Err(NxError::SwapchainError(e))
+            Err(e) => {
+                return Err(NxError::InternalError(e))
+            }
         }
     }
 

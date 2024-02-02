@@ -1,4 +1,5 @@
-use crate::{Destroy, Device, Instance};
+use ash::prelude::VkResult;
+use crate::{Destroy, Device, Instance, NxError, NxResult};
 use ash::vk::{
     MemoryAllocateInfo, MemoryPropertyFlags, MemoryRequirements, PhysicalDeviceMemoryProperties,
 };
@@ -12,7 +13,7 @@ impl DeviceMemory {
         device: &ash::Device,
         mem_props: PhysicalDeviceMemoryProperties,
         mem_req: MemoryRequirements,
-    ) -> ash::vk::DeviceMemory {
+    ) -> NxResult<ash::vk::DeviceMemory> {
         let mut info = MemoryAllocateInfo::builder().allocation_size(mem_req.size);
         let mut mem_found = false;
 
@@ -32,7 +33,16 @@ impl DeviceMemory {
             panic!("No suitable memory found");
         }
 
-        unsafe { device.allocate_memory(&info.build(), None) }.unwrap()
+        match unsafe { device.allocate_memory(&info.build(), None) } {
+            Ok(x) => Ok(x),
+            Err(e) => {
+                return match e {
+                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                    _ => Err(NxError::Unknown)
+                }
+            }
+        }
     }
 
     pub fn alloc_image_memory(
@@ -40,12 +50,17 @@ impl DeviceMemory {
         image: ash::vk::Image,
         mem_props: PhysicalDeviceMemoryProperties,
         mem_req: MemoryRequirements,
-    ) -> Self {
-        let memory = Self::alloc(device, mem_props, mem_req);
+    ) -> NxResult<Self> {
+        let memory = match Self::alloc(device, mem_props, mem_req) {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(e)
+            }
+        };
         unsafe {
             device.bind_image_memory(image, memory, 0).unwrap();
         }
-        Self { memory }
+        Ok(Self { memory })
     }
 
     pub fn alloc_buffer_memory(
@@ -53,12 +68,17 @@ impl DeviceMemory {
         buffer: ash::vk::Buffer,
         mem_props: PhysicalDeviceMemoryProperties,
         mem_req: MemoryRequirements,
-    ) -> Self {
-        let memory = Self::alloc(device, mem_props, mem_req);
+    ) -> NxResult<Self> {
+        let memory = match Self::alloc(device, mem_props, mem_req) {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(e)
+            }
+        };
         unsafe {
             device.bind_buffer_memory(buffer, memory, 0).unwrap();
         }
-        Self { memory }
+        Ok(Self { memory })
     }
 }
 

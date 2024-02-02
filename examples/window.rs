@@ -58,13 +58,13 @@ fn main() {
     let size = window.inner_size();
 
     let mut feature = InstanceFeature::empty();
-    feature.use_surface(&window);
-    let instance = InstanceBuilder::new().feature(feature).build();
-    let connecters = instance.enumerate_connecters();
+    feature.use_surface(&window).unwrap();
+    let instance = InstanceBuilder::new().feature(feature).build().unwrap();
+    let connecters = instance.enumerate_connecters().unwrap();
     let mut index = 0;
     let mut found_device = false;
     for i in &connecters {
-        let properties = i.get_queue_family_properties(&instance);
+        let properties = i.get_queue_family_properties(&instance).unwrap();
         for i in properties {
             if i.is_graphic_support() {
                 index = 0;
@@ -79,17 +79,17 @@ fn main() {
 
     let connecter = connecters[index];
 
-    let device = connecter.create_device(&instance, index);
+    let device = connecter.create_device(&instance, index).unwrap();
 
-    let surface = Surface::new(&instance, &window);
-    let swapchain = Swapchain::new(&surface, &instance, &device, connecter);
+    let surface = Surface::new(&instance, &window).unwrap();
+    let swapchain = Swapchain::new(&surface, &instance, &device, connecter).unwrap();
 
     let queue = device.get_queue(index);
     let desc = CommandPoolDescriptor::empty().queue_family_index(index);
     let pool = device.create_command_pool(&desc);
     let desc = CommandRecorderDescriptor::empty();
     let recorders = device.allocate_command_recorder(pool, &desc);
-    let images = swapchain.images();
+    let images = swapchain.images().unwrap();
     let mut swapchain_images = vec![];
     let desc = ImageViewDescriptor::empty().format(swapchain.format());
     for i in &images {
@@ -101,7 +101,7 @@ fn main() {
         Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.vert.spv"
-        )),
+        )).unwrap(),
     );
 
     let fragment = Shader::new(
@@ -109,11 +109,11 @@ fn main() {
         Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.frag.spv"
-        )),
+        )).unwrap(),
     );
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
-    let vertex_buffer = Buffer::new(&instance, connecter, &device, &desc);
+    let vertex_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
     vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void);
     vertex_buffer.lock(&device);
 
@@ -185,7 +185,7 @@ fn main() {
 
         match event {
             Event::RedrawRequested(_id) => {
-                let (img, state) = swapchain.acquire_next_image(Some(&swapchain_image_semaphore));
+                let (img, state) = swapchain.acquire_next_image(Some(&swapchain_image_semaphore)).unwrap();
 
                 image_rendered_fence.wait(&device, u64::MAX);
                 image_rendered_fence.reset(&device);
