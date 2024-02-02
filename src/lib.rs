@@ -53,7 +53,9 @@ enum NxError {
     #[error("Nothing of value could be obtained.")]
     NoValue,
     #[error("Device does not support this operation.")]
-    DeviceError,
+    HardwareError,
+    InstanceError(#[from] ash::vk::Result),
+    DeviceError(#[from] ash::vk::Result),
     IoError(#[from] std::io::Error),
     SurfaceError(#[from] ash::vk::Result),
     SwapchainError(#[from] ash::vk::Result),
@@ -90,7 +92,7 @@ impl QueueFamilyProperties {
 pub struct DeviceConnecter(pub(crate) vk::PhysicalDevice);
 
 impl DeviceConnecter {
-    pub fn create_device(self, instance: &Instance, queue_family_index: usize) -> Device {
+    pub fn create_device(self, instance: &Instance, queue_family_index: usize) -> NxResult<Device> {
         let extensions = &instance
             .device_exts
             .iter()
@@ -106,11 +108,10 @@ impl DeviceConnecter {
             .queue_create_infos(&queue_infos)
             .enabled_extension_names(&extensions)
             .build();
-        let device = instance.create_device(self, &create_info);
-        device
+        instance.create_device(self, &create_info)
     }
 
-    pub fn get_queue_family_properties(&self, instance: &Instance) -> Vec<QueueFamilyProperties> {
+    pub fn get_queue_family_properties(&self, instance: &Instance) -> NxResult<Vec<QueueFamilyProperties>> {
         instance.get_queue_family_properties(self.0)
     }
 

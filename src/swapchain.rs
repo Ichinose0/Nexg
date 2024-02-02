@@ -26,7 +26,7 @@ impl Swapchain {
         connecter: DeviceConnecter,
     ) -> NxResult<Self> {
         if !connecter.is_support_swapchain(&instance) {
-            return Err(NxError::DeviceError);
+            return Err(NxError::HardwareError);
         }
 
         let surface_capabilities = connecter.get_surface_capabilities(surface);
