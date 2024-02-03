@@ -22,3 +22,4 @@ raw-window-handle = { version = "0.5.0", optional = true }
 simple_logger = "4.3.3"
 winit = "0.28.7"
 png = "0.17.11"
+nalgebra-glm = "0.18.0"
