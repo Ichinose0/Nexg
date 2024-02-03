@@ -1,13 +1,12 @@
 extern crate nalgebra_glm as glm;
 
 use std::ffi::c_void;
-use std::fs::File;
-use std::io::BufWriter;
 use std::mem::offset_of;
-use log::info;
+use std::{env, fs::File, io::BufWriter};
+
+use nexg::{Buffer, BufferDescriptor, BufferUsage, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, VertexInputAttributeDescriptor, VertexInputBindingDescriptor};
 use png::text_metadata::ZTXtChunk;
 use simple_logger::SimpleLogger;
-use nexg::{Buffer, BufferDescriptor, BufferUsage, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, VertexInputAttributeDescriptor, VertexInputBindingDescriptor};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -19,30 +18,15 @@ pub struct Vertex {
     color: Vec4,
 }
 
-const WIDTH: u32 = 640;
-const HEIGHT: u32 = 480;
-
 pub struct Ubo {
     model: glm::Mat4,
     view: glm::Mat4,
     proj: glm::Mat4
 }
 
-const MVP: Ubo = Ubo {
-    model: glm::identity(),
-    view: glm::mat4x4(
-        0.0,0.0,0.0,0.0,
-        0.0,0.0,0.0,0.0,
-        0.0,0.0,0.0,0.0,
-        0.0,0.0,0.0,0.0,
-    ),
-    proj: glm::mat4x4(
-        0.0,0.0,0.0,0.0,
-        0.0,0.0,0.0,0.0,
-        0.0,0.0,0.0,0.0,
-        0.0,0.0,0.0,0.0,
-    ),
-};
+const WIDTH: u32 = 640;
+const HEIGHT: u32 = 480;
+
 const VERTEX: [Vertex; 4] = [
     Vertex {
         pos: Vec4(-0.5, -0.5, 0.0, 0.0),
@@ -58,11 +42,11 @@ const VERTEX: [Vertex; 4] = [
     },
     Vertex {
         pos: Vec4(0.5, -0.5, 0.0, 0.0),
-        color: Vec4(0.0, 0.0, 1.0, 1.0),
+        color: Vec4(1.0, 1.0, 1.0, 1.0),
     },
 ];
 
-const INDICES: [u32; 6] = [0, 1, 2, 1, 0, 3];
+const INDICES: [u16;6] = [0,1,2,1,0,3];
 
 fn main() {
     SimpleLogger::new().init().unwrap();
@@ -119,23 +103,12 @@ fn main() {
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
     let vertex_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
-    vertex_buffer
-        .write(&device, VERTEX.as_ptr() as *const c_void)
-        .unwrap();
+    vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void);
     vertex_buffer.lock(&device);
-
-    let desc = BufferDescriptor::empty()
-        .size(std::mem::size_of::<u32>() * INDICES.len())
-        .usage(BufferUsage::Index);
+    let desc = BufferDescriptor::empty().size(std::mem::size_of::<u16>() * INDICES.len()).usage(BufferUsage::Index);
     let index_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
-    index_buffer
-        .write(&device, INDICES.as_ptr() as *const c_void)
-        .unwrap();
+    index_buffer.write(&device, INDICES.as_ptr() as *const c_void);
     index_buffer.lock(&device);
-
-    info!("Buffer has been created.");
-    info!("vertex_buffer | {} bytes", vertex_buffer.size(&device));
-    info!("index_buffer | {} bytes", index_buffer.size(&device));
 
     let desc = SubPassDescriptor::empty();
     let subpass = SubPass::new(connecter, &desc);
@@ -192,18 +165,18 @@ fn main() {
     let begin_desc = RenderPassBeginDescriptor::empty()
         .width(WIDTH)
         .height(HEIGHT)
-        .clear(1.0, 1.0, 1.0, 1.0)
+        .clear(0.88, 0.88, 0.88, 1.0)
         .render_pass(&render_pass)
         .frame_buffer(&framebuffer);
-    recorders[0].begin(&device, begin_desc).unwrap();
+    recorders[0].begin(&device, begin_desc);
     recorders[0].bind_pipeline(&device, &pipeline[0]);
     recorders[0].bind_vertex_buffer(&device, &vertex_buffer);
-    recorders[0].bind_index_buffer(&device, &index_buffer);
-    recorders[0].draw_indexed(&device, INDICES.len() as u32, 1, 0, 0, 0);
-    recorders[0].end(&device).unwrap();
+    recorders[0].bind_index_buffer(&device,&index_buffer);
+    recorders[0].draw_indexed(&device,INDICES.len() as u32, 1, 0, 0, 0);
+    recorders[0].end(&device);
 
     let desc = QueueSubmitDescriptor::empty();
-    queue.submit(&device, &desc, &recorders).unwrap();
+    queue.submit(&device, &desc, &recorders);
 
     let file = File::create("descriptor.png").unwrap();
     let w = &mut BufWriter::new(file);
