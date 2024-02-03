@@ -19,9 +19,9 @@ pub struct Vertex {
 const WIDTH: u32 = 640;
 const HEIGHT: u32 = 480;
 
-const VERTEX: [Vertex; 3] = [
+const VERTEX: [Vertex; 4] = [
     Vertex {
-        pos: Vec4(0.0, -0.5, 0.0, 0.0),
+        pos: Vec4(-0.5, -0.5, 0.0, 0.0),
         color: Vec4(1.0, 0.0, 0.0, 1.0),
     },
     Vertex {
@@ -30,6 +30,10 @@ const VERTEX: [Vertex; 3] = [
     },
     Vertex {
         pos: Vec4(-0.5, 0.5, 0.0, 0.0),
+        color: Vec4(0.0, 0.0, 1.0, 1.0),
+    },
+    Vertex {
+        pos: Vec4(0.5, -0.5, 0.0, 0.0),
         color: Vec4(0.0, 0.0, 1.0, 1.0),
     },
 ];
@@ -158,13 +162,14 @@ fn main() {
     recorders[0].begin(&device, begin_desc);
     recorders[0].bind_pipeline(&device, &pipeline[0]);
     recorders[0].bind_vertex_buffer(&device, &vertex_buffer);
-    recorders[0].draw(&device, 3, 1, 0, 0);
+    recorders[0].bind_index_buffer(&device,&index_buffer);
+    recorders[0].draw_indexed(&device, INDICES.len() as u32,1, 0, 0, 0);
     recorders[0].end(&device);
 
     let desc = QueueSubmitDescriptor::empty();
     queue.submit(&device, &desc, &recorders);
 
-    let file = File::create("triangle.png").unwrap();
+    let file = File::create("rectangle.png").unwrap();
     let w = &mut BufWriter::new(file);
 
     let mut encoder = png::Encoder::new(w, WIDTH, HEIGHT); // Width is 2 pixels and height is 1.

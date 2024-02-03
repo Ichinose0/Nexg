@@ -1,9 +1,5 @@
 use crate::{Buffer, Destroy, Device, Instance, Pipeline, RenderPassBeginDescriptor};
-use ash::vk::{
-    ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo,
-    CommandBufferLevel, CommandBufferResetFlags, CommandPoolCreateFlags, CommandPoolCreateInfo,
-    Extent2D, Offset2D, PipelineBindPoint, Rect2D, RenderPassBeginInfo, SubpassContents,
-};
+use ash::vk::{ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferLevel, CommandBufferResetFlags, CommandPoolCreateFlags, CommandPoolCreateInfo, Extent2D, IndexType, Offset2D, PipelineBindPoint, Rect2D, RenderPassBeginInfo, SubpassContents};
 
 pub struct CommandPoolDescriptor {
     queue_family_index: Option<usize>,
@@ -151,7 +147,9 @@ impl CommandRecorder {
 
     #[inline]
     pub fn bind_index_buffer(&self, device: &Device,buffer: &Buffer) {
-
+        unsafe {
+            device.device.cmd_bind_index_buffer(self.buffer,buffer.buffer,0,IndexType::UINT32);
+        }
     }
 
     #[inline]
@@ -170,6 +168,24 @@ impl CommandRecorder {
                 instance_count,
                 first_vertex,
                 first_instance,
+            );
+        }
+    }
+
+    #[inline]
+    pub fn draw_indexed(
+        &self,
+        device: &Device,
+        index_count: u32, instance_count: u32, first_index: u32, vertex_offset: i32, first_instance: u32,
+    ) {
+        unsafe {
+            device.device.cmd_draw_indexed(
+                self.buffer,
+                index_count,
+                instance_count,
+                first_index,
+                vertex_offset,
+                first_instance
             );
         }
     }
