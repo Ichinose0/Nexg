@@ -1,5 +1,11 @@
-use crate::{Buffer, Destroy, Device, Instance, Pipeline, RenderPassBeginDescriptor};
-use ash::vk::{ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferLevel, CommandBufferResetFlags, CommandPoolCreateFlags, CommandPoolCreateInfo, Extent2D, IndexType, Offset2D, PipelineBindPoint, Rect2D, RenderPassBeginInfo, SubpassContents};
+use crate::{
+    Buffer, Destroy, Device, Instance, NxError, NxResult, Pipeline, RenderPassBeginDescriptor,
+};
+use ash::vk::{
+    ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo,
+    CommandBufferLevel, CommandBufferResetFlags, CommandPoolCreateFlags, CommandPoolCreateInfo,
+    Extent2D, IndexType, Offset2D, PipelineBindPoint, Rect2D, RenderPassBeginInfo, SubpassContents,
+};
 
 pub struct CommandPoolDescriptor {
     queue_family_index: Option<usize>,
@@ -24,14 +30,26 @@ pub struct CommandPool(pub(crate) ash::vk::CommandPool);
 
 impl CommandPool {
     #[doc(hidden)]
-    pub(crate) fn create(device: &ash::Device, descriptor: &CommandPoolDescriptor) -> Self {
+    pub(crate) fn create(
+        device: &ash::Device,
+        descriptor: &CommandPoolDescriptor,
+    ) -> NxResult<Self> {
         let queue_family_index = descriptor.queue_family_index.unwrap();
         let create_info = CommandPoolCreateInfo::builder()
             .queue_family_index(queue_family_index as u32)
             .flags(CommandPoolCreateFlags::RESET_COMMAND_BUFFER)
             .build();
-        let pool = unsafe { device.create_command_pool(&create_info, None) }.unwrap();
-        Self(pool)
+        let pool = match unsafe { device.create_command_pool(&create_info, None) } {
+            Ok(x) => x,
+            Err(e) => {
+                return match e {
+                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                    _ => Err(NxError::Unknown),
+                }
+            }
+        };
+        Ok(Self(pool))
     }
 }
 
@@ -66,22 +84,31 @@ impl CommandRecorder {
         device: &Device,
         pool: CommandPool,
         descriptor: &CommandRecorderDescriptor,
-    ) -> Vec<Self> {
+    ) -> NxResult<Vec<Self>> {
         let create_info = CommandBufferAllocateInfo::builder()
             .command_pool(pool.0)
             .command_buffer_count(descriptor.recorder_count)
             .level(CommandBufferLevel::PRIMARY)
             .build();
-        let buffers = unsafe { device.device.allocate_command_buffers(&create_info) }.unwrap();
+        let buffers = match unsafe { device.device.allocate_command_buffers(&create_info) } {
+            Ok(x) => x,
+            Err(e) => {
+                return match e {
+                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                    _ => Err(NxError::Unknown),
+                }
+            }
+        };
         assert_eq!(descriptor.recorder_count, buffers.len() as u32);
-        buffers
+        Ok(buffers
             .iter()
             .map(|x| Self { buffer: *x })
-            .collect::<Vec<Self>>()
+            .collect::<Vec<Self>>())
     }
 
     #[inline]
-    pub fn begin(&self, device: &Device, descriptor: RenderPassBeginDescriptor) {
+    pub fn begin(&self, device: &Device, descriptor: RenderPassBeginDescriptor) -> NxResult<()> {
         let create_info = CommandBufferBeginInfo::builder().build();
         let mut clear = ClearValue::default();
         unsafe {
@@ -107,21 +134,36 @@ impl CommandRecorder {
             .clear_values(&[clear])
             .build();
         unsafe {
-            device
+            match device
                 .device
                 .begin_command_buffer(self.buffer, &create_info)
-                .unwrap();
+            {
+                Ok(_) => {}
+                Err(e) => match e {
+                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                    _ => Err(NxError::Unknown),
+                }?,
+            }
             device
                 .device
                 .cmd_begin_render_pass(self.buffer, &begin_info, SubpassContents::INLINE);
         }
+        Ok(())
     }
 
     #[inline]
-    pub fn end(&self, device: &Device) {
+    pub fn end(&self, device: &Device) -> NxResult<()> {
         unsafe {
             device.device.cmd_end_render_pass(self.buffer);
-            device.device.end_command_buffer(self.buffer).unwrap();
+            match device.device.end_command_buffer(self.buffer) {
+                Ok(_) => Ok(()),
+                Err(e) => match e {
+                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                    _ => Err(NxError::Unknown),
+                },
+            }
         }
     }
 
@@ -146,9 +188,11 @@ impl CommandRecorder {
     }
 
     #[inline]
-    pub fn bind_index_buffer(&self, device: &Device,buffer: &Buffer) {
+    pub fn bind_index_buffer(&self, device: &Device, buffer: &Buffer) {
         unsafe {
-            device.device.cmd_bind_index_buffer(self.buffer,buffer.buffer,0,IndexType::UINT32);
+            device
+                .device
+                .cmd_bind_index_buffer(self.buffer, buffer.buffer, 0, IndexType::UINT32);
         }
     }
 
@@ -176,7 +220,11 @@ impl CommandRecorder {
     pub fn draw_indexed(
         &self,
         device: &Device,
-        index_count: u32, instance_count: u32, first_index: u32, vertex_offset: i32, first_instance: u32,
+        index_count: u32,
+        instance_count: u32,
+        first_index: u32,
+        vertex_offset: i32,
+        first_instance: u32,
     ) {
         unsafe {
             device.device.cmd_draw_indexed(
@@ -185,17 +233,21 @@ impl CommandRecorder {
                 instance_count,
                 first_index,
                 vertex_offset,
-                first_instance
+                first_instance,
             );
         }
     }
 
     #[inline]
-    pub fn reset(&self, device: &Device) {
+    pub fn reset(&self, device: &Device) -> NxResult<()> {
         unsafe {
-            device
+            match device
                 .device
-                .reset_command_buffer(self.buffer, CommandBufferResetFlags::empty());
+                .reset_command_buffer(self.buffer, CommandBufferResetFlags::empty())
+            {
+                Ok(_) => Ok(()),
+                Err(e) => Err(NxError::OutOfDeviceMemory),
+            }
         }
     }
 }

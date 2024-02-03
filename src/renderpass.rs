@@ -3,7 +3,9 @@ use ash::vk::{
     ImageLayout, RenderPassCreateInfo, SampleCountFlags, SubpassDescription,
 };
 
-use crate::{BindPoint, Destroy, Device, DeviceConnecter, FrameBuffer, Instance};
+use crate::{
+    BindPoint, Destroy, Device, DeviceConnecter, FrameBuffer, Instance, NxError, NxResult,
+};
 
 #[derive(Clone, Copy)]
 pub struct RenderPassBeginDescriptor<'a> {
@@ -169,7 +171,7 @@ pub struct RenderPass {
 
 impl RenderPass {
     #[inline]
-    pub fn new(device: &Device, descriptor: &RenderPassDescriptor) -> Self {
+    pub fn new(device: &Device, descriptor: &RenderPassDescriptor) -> NxResult<Self> {
         let subpasses = descriptor
             .subpasses
             .iter()
@@ -190,8 +192,15 @@ impl RenderPass {
             .subpasses(&subpasses)
             .dependencies(&[])
             .build();
-        let render_pass = unsafe { device.device.create_render_pass(&create_info, None) }.unwrap();
-        Self { render_pass }
+        let render_pass = match unsafe { device.device.create_render_pass(&create_info, None) } {
+            Ok(x) => x,
+            Err(e) => match e {
+                ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                _ => Err(NxError::Unknown),
+            }?,
+        };
+        Ok(Self { render_pass })
     }
 }
 

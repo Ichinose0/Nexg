@@ -1,5 +1,5 @@
-use ash::prelude::VkResult;
 use crate::{Destroy, Device, Instance, NxError, NxResult};
+use ash::prelude::VkResult;
 use ash::vk::{
     MemoryAllocateInfo, MemoryPropertyFlags, MemoryRequirements, PhysicalDeviceMemoryProperties,
 };
@@ -39,7 +39,7 @@ impl DeviceMemory {
                 return match e {
                     ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
                     ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
-                    _ => Err(NxError::Unknown)
+                    _ => Err(NxError::Unknown),
                 }
             }
         }
@@ -53,12 +53,15 @@ impl DeviceMemory {
     ) -> NxResult<Self> {
         let memory = match Self::alloc(device, mem_props, mem_req) {
             Ok(x) => x,
-            Err(e) => {
-                return Err(e)
-            }
+            Err(e) => return Err(e),
         };
-        unsafe {
-            device.bind_image_memory(image, memory, 0).unwrap();
+        match unsafe { device.bind_image_memory(image, memory, 0) } {
+            Ok(_) => {}
+            Err(e) => match e {
+                ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                _ => Err(NxError::Unknown),
+            }?,
         }
         Ok(Self { memory })
     }
@@ -71,14 +74,21 @@ impl DeviceMemory {
     ) -> NxResult<Self> {
         let memory = match Self::alloc(device, mem_props, mem_req) {
             Ok(x) => x,
-            Err(e) => {
-                return Err(e)
-            }
+            Err(e) => return Err(e),
         };
-        unsafe {
-            device.bind_buffer_memory(buffer, memory, 0).unwrap();
+        match unsafe { device.bind_buffer_memory(buffer, memory, 0) } {
+            Ok(_) => {}
+            Err(e) => match e {
+                ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                _ => Err(NxError::Unknown),
+            }?,
         }
         Ok(Self { memory })
+    }
+
+    pub fn size(&self, device: &Device) -> u64 {
+        unsafe { device.device.get_device_memory_commitment(self.memory) }
     }
 }
 

@@ -46,16 +46,12 @@ impl Spirv {
         let mut buf = Vec::new();
         match file.read_to_end(&mut buf) {
             Ok(_) => {}
-            Err(e) => {
-                return Err(NxError::IoError(e.to_string()))
-            }
+            Err(e) => return Err(NxError::IoError(e.to_string())),
         }
         let mut spirv_file = Cursor::new(&buf);
         let spirv = match read_spv(&mut spirv_file) {
             Ok(x) => x,
-            Err(e) => {
-                return Err(NxError::IoError(e.to_string()))
-            }
+            Err(e) => return Err(NxError::IoError(e.to_string())),
         };
 
         Ok(Self { data: spirv })

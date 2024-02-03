@@ -1,6 +1,6 @@
 use ash::vk::FramebufferCreateInfo;
 
-use crate::{Destroy, Device, ImageView, Instance, RenderPass};
+use crate::{Destroy, Device, ImageView, Instance, NxError, NxResult, RenderPass};
 
 pub struct FrameBufferDescriptor<'a> {
     width: u32,
@@ -51,7 +51,7 @@ pub struct FrameBuffer {
 
 impl FrameBuffer {
     #[inline]
-    pub fn new(device: &Device, descriptor: &FrameBufferDescriptor) -> Self {
+    pub fn new(device: &Device, descriptor: &FrameBufferDescriptor) -> NxResult<Self> {
         let render_pass = descriptor.render_pass.unwrap();
         let image_view = descriptor.image_view.unwrap();
         let create_info = FramebufferCreateInfo::builder()
@@ -61,8 +61,15 @@ impl FrameBuffer {
             .render_pass(render_pass.render_pass)
             .attachments(&[image_view.image_view])
             .build();
-        let frame_buffer = unsafe { device.device.create_framebuffer(&create_info, None) }.unwrap();
-        Self { frame_buffer }
+        let frame_buffer = match unsafe { device.device.create_framebuffer(&create_info, None) } {
+            Ok(x) => x,
+            Err(e) => match e {
+                ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                _ => Err(NxError::Unknown),
+            }?,
+        };
+        Ok(Self { frame_buffer })
     }
 }
 

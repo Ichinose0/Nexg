@@ -86,9 +86,9 @@ fn main() {
 
     let queue = device.get_queue(index);
     let desc = CommandPoolDescriptor::empty().queue_family_index(index);
-    let pool = device.create_command_pool(&desc);
+    let pool = device.create_command_pool(&desc).unwrap();
     let desc = CommandRecorderDescriptor::empty();
-    let recorders = device.allocate_command_recorder(pool, &desc);
+    let recorders = device.allocate_command_recorder(pool, &desc).unwrap();
     let images = swapchain.images().unwrap();
     let mut swapchain_images = vec![];
     let desc = ImageViewDescriptor::empty().format(swapchain.format());
@@ -101,7 +101,8 @@ fn main() {
         Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.vert.spv"
-        )).unwrap(),
+        ))
+        .unwrap(),
     );
 
     let fragment = Shader::new(
@@ -109,7 +110,8 @@ fn main() {
         Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.frag.spv"
-        )).unwrap(),
+        ))
+        .unwrap(),
     );
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
@@ -124,9 +126,9 @@ fn main() {
         .subpasses(subpasses)
         .load_op(LoadOp::Clear)
         .store_op(StoreOp::Store);
-    let render_pass = RenderPass::new(&device, &desc);
+    let render_pass = RenderPass::new(&device, &desc).unwrap();
     let desc = PipelineLayoutDescriptor::empty().render_pass(&render_pass);
-    let pipeline_layout = PipelineLayout::new(&device, &desc);
+    let pipeline_layout = PipelineLayout::new(&device, &desc).unwrap();
     let shader_stages = vec![
         ShaderStageDescriptor::empty()
             .entry_point("main")
@@ -160,7 +162,7 @@ fn main() {
         .input_descriptor(&vertex_input_desc)
         .width(size.width)
         .height(size.height);
-    let pipeline = Pipeline::new(&device, pipeline_layout, &render_pass, &desc);
+    let pipeline = Pipeline::new(&device, pipeline_layout, &render_pass, &desc).unwrap();
 
     let mut frame_buffers = vec![];
     for i in &swapchain_images {
@@ -169,23 +171,25 @@ fn main() {
             .width(size.width)
             .image_view(i)
             .height(size.height);
-        frame_buffers.push(FrameBuffer::new(&device, &desc));
+        frame_buffers.push(FrameBuffer::new(&device, &desc).unwrap());
     }
 
     let desc = FenceDescriptor::empty().signaled(true);
-    let image_rendered_fence = Fence::new(&device, &desc);
+    let image_rendered_fence = Fence::new(&device, &desc).unwrap();
 
     let semaphore_desc = SemaphoreDescriptor::empty();
 
-    let swapchain_image_semaphore = Semaphore::new(&device, &semaphore_desc);
-    let image_rendered_semaphore = Semaphore::new(&device, &semaphore_desc);
+    let swapchain_image_semaphore = Semaphore::new(&device, &semaphore_desc).unwrap();
+    let image_rendered_semaphore = Semaphore::new(&device, &semaphore_desc).unwrap();
 
     event_loop.run(move |event, _, control_flow| {
         control_flow.set_wait();
 
         match event {
             Event::RedrawRequested(_id) => {
-                let (img, state) = swapchain.acquire_next_image(Some(&swapchain_image_semaphore)).unwrap();
+                let (img, state) = swapchain
+                    .acquire_next_image(Some(&swapchain_image_semaphore))
+                    .unwrap();
 
                 image_rendered_fence.wait(&device, u64::MAX);
                 image_rendered_fence.reset(&device);

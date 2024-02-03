@@ -1,19 +1,19 @@
 use crate::mem::DeviceMemory;
-use crate::{Device, DeviceConnecter, Instance, NxResult};
+use crate::{Device, DeviceConnecter, Instance, NxError, NxResult};
 use ash::vk::{BufferCreateInfo, BufferUsageFlags, MappedMemoryRange, MemoryMapFlags, SharingMode};
 use std::ffi::c_void;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BufferUsage {
     Vertex,
-    Index
+    Index,
 }
 
 impl Into<BufferUsageFlags> for BufferUsage {
     fn into(self) -> BufferUsageFlags {
         match self {
             BufferUsage::Vertex => BufferUsageFlags::VERTEX_BUFFER,
-            BufferUsage::Index => BufferUsageFlags::INDEX_BUFFER
+            BufferUsage::Index => BufferUsageFlags::INDEX_BUFFER,
         }
     }
 }
@@ -63,10 +63,11 @@ impl Buffer {
         let buffer = unsafe { device.device.create_buffer(&create_info, None) }.unwrap();
         let mem_props = connecter.get_memory_properties(instance);
         let mem_req = unsafe { device.device.get_buffer_memory_requirements(buffer) };
-        let memory = match DeviceMemory::alloc_buffer_memory(&device.device, buffer, mem_props, mem_req) {
-            Ok(x) => x,
-            Err(e) => return Err(e)
-        };
+        let memory =
+            match DeviceMemory::alloc_buffer_memory(&device.device, buffer, mem_props, mem_req) {
+                Ok(x) => x,
+                Err(e) => return Err(e),
+            };
 
         Ok(Self {
             buffer,
@@ -75,17 +76,26 @@ impl Buffer {
         })
     }
 
-    pub fn write(&self, device: &Device, data: *const c_void) {
-        let mapped_memory = unsafe {
-            device
-                .device
-                .map_memory(
-                    self.memory.memory,
-                    0,
-                    self.size as u64,
-                    MemoryMapFlags::empty(),
-                )
-                .unwrap()
+    pub fn size(&self, device: &Device) -> u64 {
+        self.memory.size(device)
+    }
+
+    pub fn write(&self, device: &Device, data: *const c_void) -> NxResult<()> {
+        let mapped_memory = match unsafe {
+            device.device.map_memory(
+                self.memory.memory,
+                0,
+                self.size as u64,
+                MemoryMapFlags::empty(),
+            )
+        } {
+            Ok(x) => x,
+            Err(e) => match e {
+                ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                ash::vk::Result::ERROR_MEMORY_MAP_FAILED => Err(NxError::MemoryMapFailed),
+                _ => Err(NxError::Unknown),
+            }?,
         };
 
         mem_copy(mapped_memory, data, self.size);
@@ -100,6 +110,8 @@ impl Buffer {
                 .flush_mapped_memory_ranges(&[flush_memory_range])
                 .unwrap();
         }
+
+        Ok(())
     }
 
     pub fn lock(&self, device: &Device) {

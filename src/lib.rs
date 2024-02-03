@@ -59,10 +59,12 @@ pub enum NxError {
     OutOfHostMemory,
     #[error("Out of device memory")]
     OutOfDeviceMemory,
+    #[error("Failed to map memory.")]
+    MemoryMapFailed,
     #[error("`{0}`")]
     InternalError(#[from] ash::vk::Result),
     #[error("`{0}`")]
-    IoError(String)
+    IoError(String),
 }
 
 pub struct QueueFamilyProperties {
@@ -113,7 +115,10 @@ impl DeviceConnecter {
         instance.create_device(self, &create_info)
     }
 
-    pub fn get_queue_family_properties(&self, instance: &Instance) -> NxResult<Vec<QueueFamilyProperties>> {
+    pub fn get_queue_family_properties(
+        &self,
+        instance: &Instance,
+    ) -> NxResult<Vec<QueueFamilyProperties>> {
         instance.get_queue_family_properties(self.0)
     }
 
