@@ -101,7 +101,8 @@ fn main() {
         Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.vert.spv"
-        )).unwrap(),
+        ))
+        .unwrap(),
     );
 
     let fragment = Shader::new(
@@ -109,7 +110,8 @@ fn main() {
         Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.frag.spv"
-        )).unwrap(),
+        ))
+        .unwrap(),
     );
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
@@ -185,7 +187,9 @@ fn main() {
 
         match event {
             Event::RedrawRequested(_id) => {
-                let (img, state) = swapchain.acquire_next_image(Some(&swapchain_image_semaphore)).unwrap();
+                let (img, state) = swapchain
+                    .acquire_next_image(Some(&swapchain_image_semaphore))
+                    .unwrap();
 
                 image_rendered_fence.wait(&device, u64::MAX);
                 image_rendered_fence.reset(&device);

@@ -1,4 +1,4 @@
-use crate::{NxError,NxResult};
+use crate::{NxError, NxResult};
 use ash::extensions::ext::DebugUtils;
 use ash::vk::{
     self, DebugUtilsMessengerEXT, DeviceCreateInfo, PhysicalDevice, PhysicalDeviceMemoryProperties,
@@ -27,12 +27,13 @@ impl InstanceFeature {
     /// "window" feature is required.
     #[cfg(feature = "window")]
     #[inline]
-    pub fn use_surface(&mut self, handle: &impl raw_window_handle::HasRawDisplayHandle) -> NxResult<()> {
+    pub fn use_surface(
+        &mut self,
+        handle: &impl raw_window_handle::HasRawDisplayHandle,
+    ) -> NxResult<()> {
         let ext = match ash_window::enumerate_required_extensions(handle.raw_display_handle()) {
             Ok(x) => x,
-            Err(e) => {
-                return Err(NxError::InternalError(e))
-            }
+            Err(e) => return Err(NxError::InternalError(e)),
         };
         for i in ext {
             self.extensions.push(*i);
@@ -72,9 +73,7 @@ impl InstanceBuilder {
             .build();
         let instance = match unsafe { entry.create_instance(&create_info, None) } {
             Ok(x) => x,
-            Err(e) => {
-                return Err(NxError::InternalError(e))
-            }
+            Err(e) => return Err(NxError::InternalError(e)),
         };
         let mut debug_info = vk::DebugUtilsMessengerCreateInfoEXT::default();
 
@@ -91,9 +90,7 @@ impl InstanceBuilder {
         let debug_call_back =
             match unsafe { debug_utils.create_debug_utils_messenger(&debug_info, None) } {
                 Ok(x) => x,
-                Err(e) => {
-                    return Err(NxError::InternalError(e))
-                }
+                Err(e) => return Err(NxError::InternalError(e)),
             };
         Ok(Instance {
             instance,
@@ -146,9 +143,7 @@ impl Instance {
     pub fn enumerate_connecters(&self) -> NxResult<Vec<DeviceConnecter>> {
         let devices = match unsafe { self.instance.enumerate_physical_devices() } {
             Ok(x) => x,
-            Err(e) => {
-                return Err(NxError::InternalError(e))
-            }
+            Err(e) => return Err(NxError::InternalError(e)),
         };
         let devices = devices
             .iter()
@@ -191,9 +186,7 @@ impl Instance {
     ) -> NxResult<Device> {
         let device = match unsafe { self.instance.create_device(connecter.0, info, None) } {
             Ok(x) => x,
-            Err(e) => {
-                return Err(NxError::InternalError(e))
-            }
+            Err(e) => return Err(NxError::InternalError(e)),
         };
         Ok(Device::from(device))
     }

@@ -6,14 +6,14 @@ use std::ffi::c_void;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BufferUsage {
     Vertex,
-    Index
+    Index,
 }
 
 impl Into<BufferUsageFlags> for BufferUsage {
     fn into(self) -> BufferUsageFlags {
         match self {
             BufferUsage::Vertex => BufferUsageFlags::VERTEX_BUFFER,
-            BufferUsage::Index => BufferUsageFlags::INDEX_BUFFER
+            BufferUsage::Index => BufferUsageFlags::INDEX_BUFFER,
         }
     }
 }
@@ -63,10 +63,11 @@ impl Buffer {
         let buffer = unsafe { device.device.create_buffer(&create_info, None) }.unwrap();
         let mem_props = connecter.get_memory_properties(instance);
         let mem_req = unsafe { device.device.get_buffer_memory_requirements(buffer) };
-        let memory = match DeviceMemory::alloc_buffer_memory(&device.device, buffer, mem_props, mem_req) {
-            Ok(x) => x,
-            Err(e) => return Err(e)
-        };
+        let memory =
+            match DeviceMemory::alloc_buffer_memory(&device.device, buffer, mem_props, mem_req) {
+                Ok(x) => x,
+                Err(e) => return Err(e),
+            };
 
         Ok(Self {
             buffer,

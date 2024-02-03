@@ -1,6 +1,4 @@
-use crate::{
-    CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy, Queue,
-};
+use crate::{CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy, NxResult, Queue};
 
 pub(crate) enum DeviceFeature {
     Swapchain,
@@ -22,7 +20,7 @@ impl Device {
     }
 
     /// Create a command pool.
-    pub fn create_command_pool(&self, descriptor: &CommandPoolDescriptor) -> CommandPool {
+    pub fn create_command_pool(&self, descriptor: &CommandPoolDescriptor) -> NxResult<CommandPool> {
         CommandPool::create(&self.device, descriptor)
     }
 
@@ -31,7 +29,7 @@ impl Device {
         &self,
         pool: CommandPool,
         descriptor: &CommandRecorderDescriptor,
-    ) -> Vec<CommandRecorder> {
+    ) -> NxResult<Vec<CommandRecorder>> {
         CommandRecorder::create(&self, pool, descriptor)
     }
 

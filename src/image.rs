@@ -161,12 +161,11 @@ impl Image {
         let mem_props = connecter.get_memory_properties(instance);
         let mem_req = unsafe { device.device.get_image_memory_requirements(image) };
 
-        let memory = match DeviceMemory::alloc_image_memory(&device.device, image, mem_props, mem_req) {
-            Ok(x) => x,
-            Err(e) => {
-                return Err(e)
-            }
-        };
+        let memory =
+            match DeviceMemory::alloc_image_memory(&device.device, image, mem_props, mem_req) {
+                Ok(x) => x,
+                Err(e) => return Err(e),
+            };
         Ok(Self {
             image,
             size: Some(mem_req.size),

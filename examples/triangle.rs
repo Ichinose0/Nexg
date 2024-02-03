@@ -73,7 +73,7 @@ fn main() {
     let desc = CommandRecorderDescriptor::empty();
     let recorders = device.allocate_command_recorder(pool, &desc);
     let desc = ImageDescriptor::new().extent(Extent3d::new(WIDTH, HEIGHT, 1));
-    let image = Image::create(&instance,&device, connecter, &desc).unwrap();
+    let image = Image::create(&instance, &device, connecter, &desc).unwrap();
     let desc = ImageViewDescriptor::empty().format(ImageFormat::R8G8B8A8Unorm);
     let image_view = image.create_image_view(&device, &desc);
 
@@ -82,7 +82,8 @@ fn main() {
         Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.vert.spv"
-        )).unwrap(),
+        ))
+        .unwrap(),
     );
 
     let fragment = Shader::new(
@@ -90,11 +91,12 @@ fn main() {
         Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.frag.spv"
-        )).unwrap(),
+        ))
+        .unwrap(),
     );
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
-    let vertex_buffer = Buffer::new(&instance,connecter, &device, &desc).unwrap();
+    let vertex_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
     vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void);
     vertex_buffer.lock(&device);
 
