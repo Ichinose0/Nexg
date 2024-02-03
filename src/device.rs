@@ -1,4 +1,7 @@
-use crate::{CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy, NxResult, Queue};
+use crate::{
+    CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy,
+    NxResult, Queue,
+};
 
 pub(crate) enum DeviceFeature {
     Swapchain,

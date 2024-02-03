@@ -30,7 +30,10 @@ pub struct CommandPool(pub(crate) ash::vk::CommandPool);
 
 impl CommandPool {
     #[doc(hidden)]
-    pub(crate) fn create(device: &ash::Device, descriptor: &CommandPoolDescriptor) -> NxResult<Self> {
+    pub(crate) fn create(
+        device: &ash::Device,
+        descriptor: &CommandPoolDescriptor,
+    ) -> NxResult<Self> {
         let queue_family_index = descriptor.queue_family_index.unwrap();
         let create_info = CommandPoolCreateInfo::builder()
             .queue_family_index(queue_family_index as u32)
@@ -42,7 +45,7 @@ impl CommandPool {
                 return match e {
                     ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
                     ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
-                    _ => Err(NxError::Unknown)
+                    _ => Err(NxError::Unknown),
                 }
             }
         };
@@ -93,7 +96,7 @@ impl CommandRecorder {
                 return match e {
                     ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
                     ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
-                    _ => Err(NxError::Unknown)
+                    _ => Err(NxError::Unknown),
                 }
             }
         };
@@ -140,7 +143,7 @@ impl CommandRecorder {
                     ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
                     ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
                     _ => Err(NxError::Unknown),
-                }?
+                }?,
             }
             device
                 .device

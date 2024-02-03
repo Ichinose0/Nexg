@@ -10,7 +10,7 @@ use ash::vk::{
     VertexInputAttributeDescription, VertexInputBindingDescription, VertexInputRate, Viewport,
 };
 
-use crate::{Destroy, Device, Instance, RenderPass, ShaderStageDescriptor};
+use crate::{Destroy, Device, Instance, NxError, NxResult, RenderPass, ShaderStageDescriptor};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BindPoint {
@@ -211,11 +211,20 @@ pub struct PipelineLayout<'a> {
 
 impl<'a> PipelineLayout<'a> {
     #[inline]
-    pub fn new(device: &'a Device, _descriptor: &PipelineLayoutDescriptor) -> Self {
+    pub fn new(device: &'a Device, _descriptor: &PipelineLayoutDescriptor) -> NxResult<Self> {
         let layout_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]).build();
-        let layout = unsafe { device.device.create_pipeline_layout(&layout_info, None) }.unwrap();
+        let layout = match unsafe { device.device.create_pipeline_layout(&layout_info, None) } {
+            Ok(x) => x,
+            Err(e) => {
+                match e {
+                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                    _ => Err(NxError::Unknown),
+                }?
+            }
+        };
 
-        Self { layout, device }
+        Ok(Self { layout, device })
     }
 }
 
@@ -237,10 +246,10 @@ impl Pipeline {
     #[inline]
     pub fn new(
         device: &Device,
-        _pipeline_layout: PipelineLayout,
+        pipeline_layout: PipelineLayout,
         renderpass: &RenderPass,
         descriptor: &PipelineDescriptor,
-    ) -> Vec<Self> {
+    ) -> NxResult<Vec<Self>> {
         let mut stages = vec![];
         let name = CString::new("main").unwrap();
         for i in descriptor.shader_stages {
@@ -307,8 +316,8 @@ impl Pipeline {
             .logic_op_enable(false)
             .attachments(&blend_attachments)
             .build();
-        let layout_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]).build();
-        let layout = unsafe { device.device.create_pipeline_layout(&layout_info, None) }.unwrap();
+
+        let layout = pipeline_layout.layout;
 
         let vertex_input_state = match descriptor.input_descriptor {
             None => PipelineVertexInputStateCreateInfo::builder().build(),
@@ -362,10 +371,10 @@ impl Pipeline {
                 .create_graphics_pipelines(PipelineCache::null(), &[create_info], None)
         }
         .unwrap();
-        pipelines
+        Ok(pipelines
             .iter()
             .map(|x| Self { pipeline: *x })
-            .collect::<Vec<Pipeline>>()
+            .collect::<Vec<Pipeline>>())
     }
 }
 

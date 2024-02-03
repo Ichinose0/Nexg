@@ -1,5 +1,5 @@
 use crate::mem::DeviceMemory;
-use crate::{Device, DeviceConnecter, Instance, NxResult};
+use crate::{Device, DeviceConnecter, Instance, NxError, NxResult};
 use ash::vk::{BufferCreateInfo, BufferUsageFlags, MappedMemoryRange, MemoryMapFlags, SharingMode};
 use std::ffi::c_void;
 
@@ -80,8 +80,8 @@ impl Buffer {
         self.memory.size(device)
     }
 
-    pub fn write(&self, device: &Device, data: *const c_void) {
-        let mapped_memory = unsafe {
+    pub fn write(&self, device: &Device, data: *const c_void) -> NxResult<()> {
+        let mapped_memory = match unsafe {
             device
                 .device
                 .map_memory(
@@ -90,7 +90,16 @@ impl Buffer {
                     self.size as u64,
                     MemoryMapFlags::empty(),
                 )
-                .unwrap()
+        } {
+            Ok(x) => x,
+            Err(e) => {
+                match e {
+                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                    ash::vk::Result::ERROR_MEMORY_MAP_FAILED => Err(NxError::MemoryMapFailed),
+                    _ => Err(NxError::Unknown),
+                }?
+            }
         };
 
         mem_copy(mapped_memory, data, self.size);
@@ -105,6 +114,8 @@ impl Buffer {
                 .flush_mapped_memory_ranges(&[flush_memory_range])
                 .unwrap();
         }
+
+        Ok(())
     }
 
     pub fn lock(&self, device: &Device) {

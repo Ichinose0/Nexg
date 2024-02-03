@@ -1,6 +1,6 @@
 use std::os::raw::c_void;
 
-use crate::{Destroy, Device, DeviceConnecter, DeviceMemory, Extent3d, Instance, NxResult};
+use crate::{Destroy, Device, DeviceConnecter, DeviceMemory, Extent3d, Instance, NxError, NxResult};
 use ash::vk::{
     ComponentMapping, ComponentSwizzle, Format, ImageAspectFlags, ImageCreateInfo, ImageLayout,
     ImageSubresourceRange, ImageTiling, ImageUsageFlags, ImageViewCreateInfo, ImageViewType,
@@ -161,11 +161,7 @@ impl Image {
         let mem_props = connecter.get_memory_properties(instance);
         let mem_req = unsafe { device.device.get_image_memory_requirements(image) };
 
-        let memory =
-            match DeviceMemory::alloc_image_memory(&device.device, image, mem_props, mem_req) {
-                Ok(x) => x,
-                Err(e) => return Err(e),
-            };
+        let memory = DeviceMemory::alloc_image_memory(&device.device, image, mem_props, mem_req)?;
         Ok(Self {
             image,
             size: Some(mem_req.size),
@@ -173,16 +169,25 @@ impl Image {
         })
     }
 
-    pub fn map_memory(&self, device: &Device) -> *mut c_void {
-        unsafe {
+    pub fn map_memory(&self, device: &Device) -> NxResult<*mut c_void> {
+        match unsafe {
             device.device.map_memory(
                 self.memory.as_ref().unwrap().memory,
                 0,
                 self.size.unwrap(),
                 MemoryMapFlags::empty(),
             )
+        } {
+            Ok(x) => Ok(x),
+            Err(e) => {
+                match e {
+                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                    ash::vk::Result::ERROR_MEMORY_MAP_FAILED => Err(NxError::MemoryMapFailed),
+                    _ => Err(NxError::Unknown),
+                }?
+            }
         }
-        .unwrap()
     }
 
     pub fn create_image_view(
