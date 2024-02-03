@@ -65,8 +65,6 @@ pub enum NxError {
     IoError(String),
 }
 
-pub enum CommandRecordingStatus {}
-
 pub struct QueueFamilyProperties {
     graphic_support: bool,
     compute_support: bool,

@@ -1,3 +1,4 @@
+use log::info;
 use std::ffi::c_void;
 use std::mem::offset_of;
 use std::{env, fs::File, io::BufWriter};
@@ -77,7 +78,7 @@ fn main() {
     let desc = CommandPoolDescriptor::empty().queue_family_index(index);
     let pool = device.create_command_pool(&desc).unwrap();
     let desc = CommandRecorderDescriptor::empty();
-    let recorders = device.allocate_command_recorder(pool, &desc);
+    let recorders = device.allocate_command_recorder(pool, &desc).unwrap();
     let desc = ImageDescriptor::new().extent(Extent3d::new(WIDTH, HEIGHT, 1));
     let image = Image::create(&instance, &device, connecter, &desc).unwrap();
     let desc = ImageViewDescriptor::empty().format(ImageFormat::R8G8B8A8Unorm);
@@ -113,6 +114,10 @@ fn main() {
     index_buffer.write(&device, INDICES.as_ptr() as *const c_void);
     index_buffer.lock(&device);
 
+    info!("Buffer has been created.");
+    info!("vertex_buffer | {} bytes", vertex_buffer.size(&device));
+    info!("index_buffer | {} bytes", index_buffer.size(&device));
+
     let desc = SubPassDescriptor::empty();
     let subpass = SubPass::new(connecter, &desc);
     let subpasses = &[subpass];
@@ -120,7 +125,7 @@ fn main() {
         .subpasses(subpasses)
         .load_op(LoadOp::Clear)
         .store_op(StoreOp::Store);
-    let render_pass = RenderPass::new(&device, &desc);
+    let render_pass = RenderPass::new(&device, &desc).unwrap();
     let desc = PipelineLayoutDescriptor::empty().render_pass(&render_pass);
     let pipeline_layout = PipelineLayout::new(&device, &desc);
     let shader_stages = vec![

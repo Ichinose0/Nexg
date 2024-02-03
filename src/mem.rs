@@ -55,8 +55,13 @@ impl DeviceMemory {
             Ok(x) => x,
             Err(e) => return Err(e),
         };
-        unsafe {
-            device.bind_image_memory(image, memory, 0).unwrap();
+        match unsafe { device.bind_image_memory(image, memory, 0) } {
+            Ok(_) => {}
+            Err(e) => match e {
+                ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                _ => Err(NxError::Unknown),
+            }?,
         }
         Ok(Self { memory })
     }
@@ -71,10 +76,19 @@ impl DeviceMemory {
             Ok(x) => x,
             Err(e) => return Err(e),
         };
-        unsafe {
-            device.bind_buffer_memory(buffer, memory, 0).unwrap();
+        match unsafe { device.bind_buffer_memory(buffer, memory, 0) } {
+            Ok(_) => {}
+            Err(e) => match e {
+                ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                _ => Err(NxError::Unknown),
+            }?,
         }
         Ok(Self { memory })
+    }
+
+    pub fn size(&self, device: &Device) -> u64 {
+        unsafe { device.device.get_device_memory_commitment(self.memory) }
     }
 }
 

@@ -76,6 +76,10 @@ impl Buffer {
         })
     }
 
+    pub fn size(&self, device: &Device) -> u64 {
+        self.memory.size(device)
+    }
+
     pub fn write(&self, device: &Device, data: *const c_void) {
         let mapped_memory = unsafe {
             device

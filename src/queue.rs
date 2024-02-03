@@ -1,4 +1,4 @@
-use crate::{CommandRecorder, Device, Semaphore};
+use crate::{CommandRecorder, Device, NxError, NxResult, Semaphore};
 use ash::vk::{CommandBuffer, Fence, SubmitInfo};
 
 pub struct QueuePresentDescriptor<'a> {
@@ -73,7 +73,7 @@ impl Queue {
         device: &Device,
         descriptor: &QueueSubmitDescriptor,
         recorders: &[CommandRecorder],
-    ) {
+    ) -> NxResult<()> {
         let buffers = recorders
             .iter()
             .map(|x| x.buffer)
@@ -98,10 +98,14 @@ impl Queue {
             .command_buffers(&buffers)
             .build();
         unsafe {
-            device
-                .device
-                .queue_submit(self.0, &[submit_info], fence)
-                .unwrap();
+            match device.device.queue_submit(self.0, &[submit_info], fence) {
+                Ok(_) => Ok(()),
+                Err(e) => match e {
+                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                    _ => Err(NxError::Unknown),
+                }?,
+            }
         }
     }
 }
