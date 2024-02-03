@@ -104,14 +104,14 @@ fn main() {
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
     let vertex_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
-    vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void);
+    vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void).unwrap();
     vertex_buffer.lock(&device);
 
     let desc = BufferDescriptor::empty()
         .size(std::mem::size_of::<u32>() * INDICES.len())
         .usage(BufferUsage::Index);
     let index_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
-    index_buffer.write(&device, INDICES.as_ptr() as *const c_void);
+    index_buffer.write(&device, INDICES.as_ptr() as *const c_void).unwrap();
     index_buffer.lock(&device);
 
     info!("Buffer has been created.");
@@ -176,17 +176,17 @@ fn main() {
         .clear(1.0, 1.0, 1.0, 1.0)
         .render_pass(&render_pass)
         .frame_buffer(&framebuffer);
-    recorders[0].begin(&device, begin_desc);
+    recorders[0].begin(&device, begin_desc).unwrap();
     recorders[0].bind_pipeline(&device, &pipeline[0]);
     recorders[0].bind_vertex_buffer(&device, &vertex_buffer);
     recorders[0].bind_index_buffer(&device, &index_buffer);
     recorders[0].draw_indexed(&device, INDICES.len() as u32, 1, 0, 0, 0);
-    recorders[0].end(&device);
+    recorders[0].end(&device).unwrap();
 
     let desc = QueueSubmitDescriptor::empty();
-    queue.submit(&device, &desc, &recorders);
+    queue.submit(&device, &desc, &recorders).unwrap();
 
-    let file = File::create("rectangle.png").unwrap();
+    let file = File::create("index_buffer.png").unwrap();
     let w = &mut BufWriter::new(file);
 
     let mut encoder = png::Encoder::new(w, WIDTH, HEIGHT); // Width is 2 pixels and height is 1.

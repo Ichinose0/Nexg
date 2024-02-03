@@ -17,8 +17,13 @@ Nexg aims to support gaming applications as well as operation on GPUs
 
 # Examples
 ### Triangle
-[Code](https://github.com/Ichinose0/Gallium/blob/main/examples/triangle.rs)
-![triangle](triangle.png)
+**[Code](https://github.com/Ichinose0/Gallium/blob/main/examples/triangle.rs)**  
+  
+![triangle](media/img/triangle.png)
+### Index buffer
+**[Code](https://github.com/Ichinose0/Gallium/blob/main/examples/index_buffer.rs)**
+
+![triangle](media/img/index_buffer.png)
 
 # Notice
 This API is not **an abstraction** to other graphics APIs (DirectX, Metal).  
