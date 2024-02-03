@@ -150,6 +150,11 @@ impl CommandRecorder {
     }
 
     #[inline]
+    pub fn bind_index_buffer(&self, device: &Device,buffer: &Buffer) {
+
+    }
+
+    #[inline]
     pub fn draw(
         &self,
         device: &Device,

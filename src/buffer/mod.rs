@@ -6,12 +6,14 @@ use std::ffi::c_void;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BufferUsage {
     Vertex,
+    Index
 }
 
 impl Into<BufferUsageFlags> for BufferUsage {
     fn into(self) -> BufferUsageFlags {
         match self {
             BufferUsage::Vertex => BufferUsageFlags::VERTEX_BUFFER,
+            BufferUsage::Index => BufferUsageFlags::INDEX_BUFFER
         }
     }
 }
