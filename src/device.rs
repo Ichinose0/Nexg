@@ -33,7 +33,7 @@ impl Device {
         pool: CommandPool,
         descriptor: &CommandRecorderDescriptor,
     ) -> NxResult<Vec<CommandRecorder>> {
-        CommandRecorder::create(&self, pool, descriptor)
+        CommandRecorder::create(self, pool, descriptor)
     }
 
     pub fn destroy<D>(&self, object: &D)

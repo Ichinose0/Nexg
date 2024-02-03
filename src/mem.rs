@@ -1,5 +1,4 @@
 use crate::{Destroy, Device, Instance, NxError, NxResult};
-use ash::prelude::VkResult;
 use ash::vk::{
     MemoryAllocateInfo, MemoryPropertyFlags, MemoryRequirements, PhysicalDeviceMemoryProperties,
 };
@@ -35,13 +34,11 @@ impl DeviceMemory {
 
         match unsafe { device.allocate_memory(&info.build(), None) } {
             Ok(x) => Ok(x),
-            Err(e) => {
-                return match e {
-                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
-                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
-                    _ => Err(NxError::Unknown),
-                }
-            }
+            Err(e) => match e {
+                ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                _ => Err(NxError::Unknown),
+            }?,
         }
     }
 

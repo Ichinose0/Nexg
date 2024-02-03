@@ -104,14 +104,18 @@ fn main() {
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
     let vertex_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
-    vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void).unwrap();
+    vertex_buffer
+        .write(&device, VERTEX.as_ptr() as *const c_void)
+        .unwrap();
     vertex_buffer.lock(&device);
 
     let desc = BufferDescriptor::empty()
         .size(std::mem::size_of::<u32>() * INDICES.len())
         .usage(BufferUsage::Index);
     let index_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
-    index_buffer.write(&device, INDICES.as_ptr() as *const c_void).unwrap();
+    index_buffer
+        .write(&device, INDICES.as_ptr() as *const c_void)
+        .unwrap();
     index_buffer.lock(&device);
 
     info!("Buffer has been created.");

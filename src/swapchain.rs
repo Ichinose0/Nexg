@@ -1,4 +1,3 @@
-use ash::prelude::VkResult;
 use ash::vk::{
     ImageUsageFlags, PresentInfoKHR, Semaphore, SharingMode, SwapchainCreateInfoKHR, SwapchainKHR,
 };
@@ -28,7 +27,7 @@ impl Swapchain {
         device: &Device,
         connecter: DeviceConnecter,
     ) -> NxResult<Self> {
-        if !connecter.is_support_swapchain(&instance) {
+        if !connecter.is_support_swapchain(instance) {
             return Err(NxError::HardwareError);
         }
 
@@ -91,7 +90,7 @@ impl Swapchain {
                 Ok((image, state))
             }
 
-            Err(e) => return Err(NxError::InternalError(e)),
+            Err(e) => Err(NxError::InternalError(e)),
         }
     }
 
@@ -116,7 +115,7 @@ impl Swapchain {
                 .queue_present(descriptor.queue.unwrap().0, &present_info)
         } {
             Ok(_) => Ok(()),
-            Err(e) => return Err(NxError::InternalError(e)),
+            Err(e) => Err(NxError::InternalError(e)),
         }
     }
 
@@ -126,7 +125,7 @@ impl Swapchain {
             .iter()
             .map(|x| Image::from_raw(*x))
             .collect::<Vec<Image>>();
-        if images.len() != 0 {
+        if !images.is_empty() {
             Ok(images)
         } else {
             Err(NxError::NoValue)

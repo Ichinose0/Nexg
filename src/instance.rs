@@ -117,28 +117,28 @@ impl Instance {
     /// You can get the appropriate connector by getting the QueueFamilyProperties from the connector.
     /// # Example
     ///```
-    /// use gear::{InstanceBuilder,CommandPoolDescriptor,CommandRecorderDescriptor};
-    /// fn main() {
-    ///     let instance = InstanceBuilder::new().build();
-    ///     let connecters = instance.enumerate_connecters();
-    ///     let mut index = 0;
-    ///     let mut found_device = false;
-    ///     for i in &connecters {
-    ///         let properties = i.get_queue_family_properties();
-    ///         for i in properties {
-    ///             if i.is_compute_support() {
-    ///                 index = 0;
-    ///                 found_device = true;
-    ///                 break;
-    ///             }
-    ///         }
-    ///     }
-    ///     if !found_device {
-    ///         panic!("No suitable device found.")
-    ///     }
+    /// use nexg::{InstanceBuilder,CommandPoolDescriptor,CommandRecorderDescriptor};
     ///
-    ///     let connecter = connecters[index];
-    /// }
+    ///let instance = InstanceBuilder::new().build();
+    ///let connecters = instance.enumerate_connecters();
+    ///let mut index = 0;
+    ///let mut found_device = false;
+    ///for i in &connecters {
+    ///let properties = i.get_queue_family_properties();
+    ///for i in properties {
+    ///if i.is_compute_support() {
+    ///index = 0;
+    ///found_device = true;
+    ///break;
+    ///}
+    ///}
+    ///}
+    ///if !found_device {
+    ///panic!("No suitable device found.")
+    ///}
+    ///
+    ///let connecter = connecters[index];
+    ///
     ///```
     pub fn enumerate_connecters(&self) -> NxResult<Vec<DeviceConnecter>> {
         let devices = match unsafe { self.instance.enumerate_physical_devices() } {
@@ -149,7 +149,7 @@ impl Instance {
             .iter()
             .map(|x| DeviceConnecter(*x))
             .collect::<Vec<DeviceConnecter>>();
-        if devices.len() != 0 {
+        if !devices.is_empty() {
             Ok(devices)
         } else {
             Err(NxError::NoValue)
@@ -172,9 +172,9 @@ impl Instance {
                     let patch = vk::api_version_patch(v);
                     Some(format!("{}.{}.{}", major, minor, patch))
                 }
-                None => return None,
+                None => None,
             },
-            Err(_) => return None,
+            Err(_) => None,
         }
     }
 
@@ -204,7 +204,7 @@ impl Instance {
             .iter()
             .map(|x| crate::QueueFamilyProperties::from(*x))
             .collect::<Vec<crate::QueueFamilyProperties>>();
-        if props.len() != 0 {
+        if !props.is_empty() {
             Ok(props)
         } else {
             Err(NxError::NoValue)

@@ -110,7 +110,7 @@ impl DeviceConnecter {
             .build()];
         let create_info = DeviceCreateInfo::builder()
             .queue_create_infos(&queue_infos)
-            .enabled_extension_names(&extensions)
+            .enabled_extension_names(extensions)
             .build();
         instance.create_device(self, &create_info)
     }
