@@ -69,9 +69,9 @@ fn main() {
 
     let queue = device.get_queue(index);
     let desc = CommandPoolDescriptor::empty().queue_family_index(index);
-    let pool = device.create_command_pool(&desc);
+    let pool = device.create_command_pool(&desc).unwrap();
     let desc = CommandRecorderDescriptor::empty();
-    let recorders = device.allocate_command_recorder(pool, &desc);
+    let recorders = device.allocate_command_recorder(pool, &desc).unwrap();
     let desc = ImageDescriptor::new().extent(Extent3d::new(WIDTH, HEIGHT, 1));
     let image = Image::create(&instance, &device, connecter, &desc).unwrap();
     let desc = ImageViewDescriptor::empty().format(ImageFormat::R8G8B8A8Unorm);
@@ -107,9 +107,9 @@ fn main() {
         .subpasses(subpasses)
         .load_op(LoadOp::Clear)
         .store_op(StoreOp::Store);
-    let render_pass = RenderPass::new(&device, &desc);
+    let render_pass = RenderPass::new(&device, &desc).unwrap();
     let desc = PipelineLayoutDescriptor::empty().render_pass(&render_pass);
-    let pipeline_layout = PipelineLayout::new(&device, &desc);
+    let pipeline_layout = PipelineLayout::new(&device, &desc).unwrap();
     let shader_stages = vec![
         ShaderStageDescriptor::empty()
             .entry_point("main")
@@ -143,14 +143,14 @@ fn main() {
         .input_descriptor(&vertex_input_desc)
         .width(WIDTH)
         .height(HEIGHT);
-    let pipeline = Pipeline::new(&device, pipeline_layout, &render_pass, &desc);
+    let pipeline = Pipeline::new(&device, pipeline_layout, &render_pass, &desc).unwrap();
 
     let desc = FrameBufferDescriptor::empty()
         .render_pass(&render_pass)
         .image_view(&image_view)
         .width(WIDTH)
         .height(HEIGHT);
-    let framebuffer = FrameBuffer::new(&device, &desc);
+    let framebuffer = FrameBuffer::new(&device, &desc).unwrap();
 
     let begin_desc = RenderPassBeginDescriptor::empty()
         .width(WIDTH)
@@ -194,7 +194,7 @@ fn main() {
         .unwrap();
 
     let mut writer = encoder.write_header().unwrap();
-    let data = image.map_memory(&device);
+    let data = image.map_memory(&device).unwrap();
     let slice: &[u8] =
         unsafe { std::slice::from_raw_parts(data as *const u8, (WIDTH * HEIGHT * 4) as usize) };
     writer.write_image_data(&slice).unwrap(); // Save

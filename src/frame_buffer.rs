@@ -63,13 +63,11 @@ impl FrameBuffer {
             .build();
         let frame_buffer = match unsafe { device.device.create_framebuffer(&create_info, None) } {
             Ok(x) => x,
-            Err(e) => {
-                match e {
-                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
-                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
-                    _ => Err(NxError::Unknown),
-                }?
-            }
+            Err(e) => match e {
+                ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                _ => Err(NxError::Unknown),
+            }?,
         };
         Ok(Self { frame_buffer })
     }

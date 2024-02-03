@@ -82,24 +82,20 @@ impl Buffer {
 
     pub fn write(&self, device: &Device, data: *const c_void) -> NxResult<()> {
         let mapped_memory = match unsafe {
-            device
-                .device
-                .map_memory(
-                    self.memory.memory,
-                    0,
-                    self.size as u64,
-                    MemoryMapFlags::empty(),
-                )
+            device.device.map_memory(
+                self.memory.memory,
+                0,
+                self.size as u64,
+                MemoryMapFlags::empty(),
+            )
         } {
             Ok(x) => x,
-            Err(e) => {
-                match e {
-                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
-                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
-                    ash::vk::Result::ERROR_MEMORY_MAP_FAILED => Err(NxError::MemoryMapFailed),
-                    _ => Err(NxError::Unknown),
-                }?
-            }
+            Err(e) => match e {
+                ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                ash::vk::Result::ERROR_MEMORY_MAP_FAILED => Err(NxError::MemoryMapFailed),
+                _ => Err(NxError::Unknown),
+            }?,
         };
 
         mem_copy(mapped_memory, data, self.size);

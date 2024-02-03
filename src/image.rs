@@ -1,6 +1,8 @@
 use std::os::raw::c_void;
 
-use crate::{Destroy, Device, DeviceConnecter, DeviceMemory, Extent3d, Instance, NxError, NxResult};
+use crate::{
+    Destroy, Device, DeviceConnecter, DeviceMemory, Extent3d, Instance, NxError, NxResult,
+};
 use ash::vk::{
     ComponentMapping, ComponentSwizzle, Format, ImageAspectFlags, ImageCreateInfo, ImageLayout,
     ImageSubresourceRange, ImageTiling, ImageUsageFlags, ImageViewCreateInfo, ImageViewType,
@@ -179,14 +181,12 @@ impl Image {
             )
         } {
             Ok(x) => Ok(x),
-            Err(e) => {
-                match e {
-                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
-                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
-                    ash::vk::Result::ERROR_MEMORY_MAP_FAILED => Err(NxError::MemoryMapFailed),
-                    _ => Err(NxError::Unknown),
-                }?
-            }
+            Err(e) => match e {
+                ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                ash::vk::Result::ERROR_MEMORY_MAP_FAILED => Err(NxError::MemoryMapFailed),
+                _ => Err(NxError::Unknown),
+            }?,
         }
     }
 

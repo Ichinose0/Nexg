@@ -215,13 +215,11 @@ impl<'a> PipelineLayout<'a> {
         let layout_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]).build();
         let layout = match unsafe { device.device.create_pipeline_layout(&layout_info, None) } {
             Ok(x) => x,
-            Err(e) => {
-                match e {
-                    ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
-                    ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
-                    _ => Err(NxError::Unknown),
-                }?
-            }
+            Err(e) => match e {
+                ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                _ => Err(NxError::Unknown),
+            }?,
         };
 
         Ok(Self { layout, device })
