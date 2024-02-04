@@ -13,16 +13,21 @@ use simple_logger::SimpleLogger;
 pub struct Vec4(f32, f32, f32, f32);
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
+pub struct Vec2(f32, f32);
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
 pub struct Vertex {
     pos: Vec4,
     color: Vec4,
 }
 
-pub struct Ubo {
-    model: glm::Mat4,
-    view: glm::Mat4,
-    proj: glm::Mat4
+struct SceneData {
+    rect_center: Vec4
 }
+
+const SCENE_DATA:SceneData = SceneData {
+    rect_center: Vec4(0.3,-0.2,0.0,1.0),
+};
 
 const WIDTH: u32 = 640;
 const HEIGHT: u32 = 480;
@@ -103,12 +108,16 @@ fn main() {
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
     let vertex_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
-    vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void);
+    vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void).unwrap();
     vertex_buffer.lock(&device);
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<u16>() * INDICES.len()).usage(BufferUsage::Index);
     let index_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
-    index_buffer.write(&device, INDICES.as_ptr() as *const c_void);
+    index_buffer.write(&device, INDICES.as_ptr() as *const c_void).unwrap();
     index_buffer.lock(&device);
+    let desc = BufferDescriptor::empty().size(std::mem::size_of::<SceneData>()).usage(BufferUsage::Uniform);
+    let uniform_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
+    uniform_buffer.write(&device, &SCENE_DATA as *const SceneData as *const c_void).unwrap();
+    uniform_buffer.lock(&device);
 
     let desc = SubPassDescriptor::empty();
     let subpass = SubPass::new(connecter, &desc);
