@@ -1,16 +1,8 @@
 use std::ffi::CString;
 
-use ash::vk::{
-    ColorComponentFlags, CullModeFlags, Extent2D, Format, FrontFace, GraphicsPipelineCreateInfo,
-    Offset2D, PipelineCache, PipelineColorBlendAttachmentState, PipelineColorBlendStateCreateInfo,
-    PipelineInputAssemblyStateCreateInfo, PipelineLayoutCreateInfo,
-    PipelineMultisampleStateCreateInfo, PipelineRasterizationStateCreateInfo,
-    PipelineShaderStageCreateInfo, PipelineVertexInputStateCreateInfo,
-    PipelineViewportStateCreateInfo, PolygonMode, PrimitiveTopology, Rect2D, SampleCountFlags,
-    VertexInputAttributeDescription, VertexInputBindingDescription, VertexInputRate, Viewport,
-};
+use ash::vk::{ColorComponentFlags, CullModeFlags, DescriptorSetLayoutCreateInfo, Extent2D, Format, FrontFace, GraphicsPipelineCreateInfo, Offset2D, PipelineCache, PipelineColorBlendAttachmentState, PipelineColorBlendStateCreateInfo, PipelineInputAssemblyStateCreateInfo, PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo, PipelineRasterizationStateCreateInfo, PipelineShaderStageCreateInfo, PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode, PrimitiveTopology, Rect2D, SampleCountFlags, VertexInputAttributeDescription, VertexInputBindingDescription, VertexInputRate, Viewport};
 
-use crate::{Destroy, Device, Instance, NxError, NxResult, RenderPass, ShaderStageDescriptor};
+use crate::{Destroy, Device, Instance, NxError, NxResult, RenderPass, Shader, ShaderStage, ShaderStageDescriptor};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BindPoint {
@@ -31,6 +23,7 @@ pub struct PipelineLayoutDescriptor<'a> {
     min_depth: f32,
     max_depth: f32,
     renderpass: Option<&'a RenderPass>,
+    set_layout_descriptor: Option<&'a DescriptorSetLayout>
 }
 
 impl<'a> PipelineLayoutDescriptor<'a> {
@@ -42,7 +35,14 @@ impl<'a> PipelineLayoutDescriptor<'a> {
             min_depth: 0.0,
             max_depth: 1.0,
             renderpass: None,
+            set_layout_descriptor: None
         }
+    }
+
+    #[inline]
+    pub fn set_layout_descriptor(mut self,set_layout_descriptor: &'a DescriptorSetLayout) -> Self {
+        self.set_layout_descriptor = Some(set_layout_descriptor);
+        self
     }
 
     #[inline]
@@ -155,6 +155,73 @@ impl<'a> PipelineVertexInputDescriptor<'a> {
     }
 }
 
+#[derive(Clone,Copy)]
+pub enum DescriptorType {
+    UniformBuffer
+}
+
+impl Into<ash::vk::DescriptorType> for DescriptorType {
+    fn into(self) -> ash::vk::DescriptorType {
+        match self {
+            DescriptorType::UniformBuffer => ash::vk::DescriptorType::UNIFORM_BUFFER
+        }
+    }
+}
+
+pub struct DescriptorSetLayoutBinding {
+    binding: u32,
+    desc_type: DescriptorType,
+    count: u32,
+    flags: ShaderStage
+}
+
+impl DescriptorSetLayoutBinding {
+    pub fn empty() -> Self {
+        Self {
+            binding: 0,
+            desc_type: DescriptorType::UniformBuffer,
+            count: 0,
+            flags: ShaderStage::Vertex,
+        }
+    }
+
+    pub fn binding(mut self,binding: u32) -> Self {
+        self.binding = binding;
+        self
+    }
+
+    pub fn desc_type(mut self,desc_type: DescriptorType) -> Self {
+        self.desc_type = desc_type;
+        self
+    }
+
+    pub fn count(mut self,count: u32) -> Self {
+        self.count = count;
+        self
+    }
+
+    pub fn shader_stage(mut self,stage: ShaderStage) -> Self {
+        self.flags = stage;
+        self
+    }
+}
+
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub struct DescriptorSetLayout {
+    inner: ash::vk::DescriptorSetLayout
+}
+
+impl DescriptorSetLayout {
+    pub fn new(device: &Device,descriptor: &DescriptorSetLayoutBinding) -> Self {
+        let bindings = vec![ash::vk::DescriptorSetLayoutBinding::builder().binding(descriptor.binding).descriptor_type(descriptor.desc_type.into()).descriptor_count(descriptor.count).stage_flags(descriptor.flags.into()).build()];
+        let create_info = DescriptorSetLayoutCreateInfo::builder().bindings(&bindings).build();
+        let inner = unsafe { device.device.create_descriptor_set_layout(&create_info,None) }.unwrap();
+        Self {
+            inner
+        }
+    }
+}
+
 pub struct PipelineDescriptor<'a> {
     width: u32,
     height: u32,
@@ -211,8 +278,16 @@ pub struct PipelineLayout<'a> {
 
 impl<'a> PipelineLayout<'a> {
     #[inline]
-    pub fn new(device: &'a Device, _descriptor: &PipelineLayoutDescriptor) -> NxResult<Self> {
-        let layout_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]).build();
+    pub fn new(device: &'a Device, descriptor: &PipelineLayoutDescriptor) -> NxResult<Self> {
+        let mut layout_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]);
+        let mut layouts = vec![];
+        match descriptor.set_layout_descriptor {
+            None => {}
+            Some(x) => {
+                layouts.push(x.inner);
+            }
+        }
+        let layout_info = layout_info.set_layouts(&layouts).build();
         let layout = match unsafe { device.device.create_pipeline_layout(&layout_info, None) } {
             Ok(x) => x,
             Err(e) => match e {
