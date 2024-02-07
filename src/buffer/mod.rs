@@ -7,6 +7,7 @@ use std::ffi::c_void;
 pub enum BufferUsage {
     Vertex,
     Index,
+    Uniform
 }
 
 impl Into<BufferUsageFlags> for BufferUsage {
@@ -14,6 +15,7 @@ impl Into<BufferUsageFlags> for BufferUsage {
         match self {
             BufferUsage::Vertex => BufferUsageFlags::VERTEX_BUFFER,
             BufferUsage::Index => BufferUsageFlags::INDEX_BUFFER,
+            BufferUsage::Uniform => BufferUsageFlags::UNIFORM_BUFFER
         }
     }
 }

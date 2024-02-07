@@ -2,15 +2,7 @@ use std::ffi::c_void;
 use std::mem::offset_of;
 use std::{env, fs::File, io::BufWriter};
 
-use nexg::{
-    Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat,
-    Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat,
-    ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor,
-    PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor,
-    RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, ShaderStage,
-    ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor,
-    VertexInputAttributeDescriptor, VertexInputBindingDescriptor,
-};
+use nexg::{Buffer, BufferDescriptor, BufferUsage, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, VertexInputAttributeDescriptor, VertexInputBindingDescriptor};
 use png::text_metadata::ZTXtChunk;
 use simple_logger::SimpleLogger;
 
@@ -27,9 +19,9 @@ pub struct Vertex {
 const WIDTH: u32 = 640;
 const HEIGHT: u32 = 480;
 
-const VERTEX: [Vertex; 3] = [
+const VERTEX: [Vertex; 4] = [
     Vertex {
-        pos: Vec4(0.0, -0.5, 0.0, 0.0),
+        pos: Vec4(-0.5, -0.5, 0.0, 0.0),
         color: Vec4(1.0, 0.0, 0.0, 1.0),
     },
     Vertex {
@@ -40,7 +32,13 @@ const VERTEX: [Vertex; 3] = [
         pos: Vec4(-0.5, 0.5, 0.0, 0.0),
         color: Vec4(0.0, 0.0, 1.0, 1.0),
     },
+    Vertex {
+        pos: Vec4(0.5, -0.5, 0.0, 0.0),
+        color: Vec4(1.0, 1.0, 1.0, 1.0),
+    },
 ];
+
+const INDICES: [u16;6] = [0,1,2,1,0,3];
 
 fn main() {
     SimpleLogger::new().init().unwrap();
@@ -80,25 +78,29 @@ fn main() {
     let vertex = Shader::new(
         &device,
         Spirv::new(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/examples/shader/shader.vert.spv"
+        env!("CARGO_MANIFEST_DIR"),
+        "/examples/shader/shader.vert.spv"
         ))
-        .unwrap(),
+            .unwrap(),
     );
 
     let fragment = Shader::new(
         &device,
         Spirv::new(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/examples/shader/shader.frag.spv"
+        env!("CARGO_MANIFEST_DIR"),
+        "/examples/shader/shader.frag.spv"
         ))
-        .unwrap(),
+            .unwrap(),
     );
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
     let vertex_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
     vertex_buffer.write(&device, VERTEX.as_ptr() as *const c_void);
     vertex_buffer.lock(&device);
+    let desc = BufferDescriptor::empty().size(std::mem::size_of::<u16>() * INDICES.len()).usage(BufferUsage::Index);
+    let index_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
+    index_buffer.write(&device, INDICES.as_ptr() as *const c_void);
+    index_buffer.lock(&device);
 
     let desc = SubPassDescriptor::empty();
     let subpass = SubPass::new(connecter, &desc);
@@ -155,19 +157,20 @@ fn main() {
     let begin_desc = RenderPassBeginDescriptor::empty()
         .width(WIDTH)
         .height(HEIGHT)
-        .clear(1.0, 1.0, 1.0, 1.0)
+        .clear(0.88, 0.88, 0.88, 1.0)
         .render_pass(&render_pass)
         .frame_buffer(&framebuffer);
     recorders[0].begin(&device, begin_desc);
     recorders[0].bind_pipeline(&device, &pipeline[0]);
     recorders[0].bind_vertex_buffer(&device, &vertex_buffer);
-    recorders[0].draw(&device, 3, 1, 0, 0);
+    recorders[0].bind_index_buffer(&device,&index_buffer);
+    recorders[0].draw_indexed(&device,INDICES.len() as u32, 1, 0, 0, 0);
     recorders[0].end(&device);
 
     let desc = QueueSubmitDescriptor::empty();
     queue.submit(&device, &desc, &recorders);
 
-    let file = File::create("triangle.png").unwrap();
+    let file = File::create("index_buffer.png").unwrap();
     let w = &mut BufWriter::new(file);
 
     let mut encoder = png::Encoder::new(w, WIDTH, HEIGHT); // Width is 2 pixels and height is 1.

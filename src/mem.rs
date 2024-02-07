@@ -1,7 +1,6 @@
+use std::ffi::c_void;
 use crate::{Destroy, Device, Instance, NxError, NxResult};
-use ash::vk::{
-    MemoryAllocateInfo, MemoryPropertyFlags, MemoryRequirements, PhysicalDeviceMemoryProperties,
-};
+use ash::vk::{MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags, MemoryRequirements, PhysicalDeviceMemoryProperties};
 
 pub struct DeviceMemory {
     pub(crate) memory: ash::vk::DeviceMemory,
@@ -86,6 +85,31 @@ impl DeviceMemory {
 
     pub fn size(&self, device: &Device) -> u64 {
         unsafe { device.device.get_device_memory_commitment(self.memory) }
+    }
+
+    pub fn map(&self,device: &Device,size: u64) -> NxResult<*mut c_void> {
+        match unsafe {
+            device.device.map_memory(
+                self.memory,
+                0,
+                size,
+                MemoryMapFlags::empty(),
+            )
+        } {
+            Ok(x) => Ok(x),
+            Err(e) => match e {
+                ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => Err(NxError::OutOfDeviceMemory),
+                ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => Err(NxError::OutOfHostMemory),
+                ash::vk::Result::ERROR_MEMORY_MAP_FAILED => Err(NxError::MemoryMapFailed),
+                _ => Err(NxError::Unknown),
+            }?,
+        }
+    }
+
+    pub fn unmap(&self,device: &Device) {
+        unsafe {
+            device.device.unmap_memory(self.memory);
+        }
     }
 }
 

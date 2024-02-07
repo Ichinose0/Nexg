@@ -1,7 +1,5 @@
-use crate::{
-    CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy,
-    NxResult, Queue,
-};
+use ash::vk::{DescriptorBufferInfo, WriteDescriptorSet};
+use crate::{CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy, NxResult, Queue, Resource, ResourceUpdateDescriptor};
 
 pub(crate) enum DeviceFeature {
     Swapchain,
@@ -34,6 +32,16 @@ impl Device {
         descriptor: &CommandRecorderDescriptor,
     ) -> NxResult<Vec<CommandRecorder>> {
         CommandRecorder::create(self, pool, descriptor)
+    }
+
+    pub fn update_resource(&self,resource: &Resource,descriptor: &ResourceUpdateDescriptor) {
+        let buffer_info = descriptor.buffer_desc.iter().map(|x| {
+            DescriptorBufferInfo::builder().buffer(x.buffer.buffer).offset(x.offset).range(x.range as u64).build()
+        }).collect::<Vec<DescriptorBufferInfo>>();
+        let desc = WriteDescriptorSet::builder().dst_set(descriptor.resource.descriptor_set).dst_binding(descriptor.binding).dst_array_element(descriptor.array_element).descriptor_type(descriptor.resource_type.into()).buffer_info(&buffer_info).build();
+        unsafe {
+            self.device.update_descriptor_sets(&[desc],&[]);
+        }
     }
 
     pub fn destroy<D>(&self, object: &D)
