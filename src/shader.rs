@@ -56,6 +56,16 @@ impl Spirv {
 
         Ok(Self { data: spirv })
     }
+
+    pub fn from_raw(data: &[u8]) -> NxResult<Self> {
+        let mut spirv_file = Cursor::new(data);
+        let spirv = match read_spv(&mut spirv_file) {
+            Ok(x) => x,
+            Err(e) => return Err(NxError::IoError(e.to_string())),
+        };
+
+        Ok(Self { data: spirv })
+    }
 }
 
 /// Represents a shader

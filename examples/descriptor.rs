@@ -8,6 +8,9 @@ use nexg::{Buffer, BufferDescriptor, BufferUsage, CommandPoolDescriptor, Command
 use png::text_metadata::ZTXtChunk;
 use simple_logger::SimpleLogger;
 
+const VERTEX_S:&'static [u8] = include_bytes!("shader/shader2.vert.spv");
+const FRAGMENT_S:&'static [u8] = include_bytes!("shader/shader.frag.spv");
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct Vec4(f32, f32, f32, f32);
@@ -90,20 +93,12 @@ fn main() {
 
     let vertex = Shader::new(
         &device,
-        Spirv::new(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/examples/shader/shader2.vert.spv"
-        ))
-            .unwrap(),
+        Spirv::from_raw(VERTEX_S).unwrap()
     );
 
     let fragment = Shader::new(
         &device,
-        Spirv::new(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/examples/shader/shader.frag.spv"
-        ))
-            .unwrap(),
+        Spirv::from_raw(FRAGMENT_S).unwrap(),
     );
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
