@@ -23,7 +23,7 @@ pub struct PipelineLayoutDescriptor<'a> {
     min_depth: f32,
     max_depth: f32,
     renderpass: Option<&'a RenderPass>,
-    set_layout_descriptor: Option<&'a DescriptorSetLayout>
+    set_layout_descriptor: Option<&'a Resource>
 }
 
 impl<'a> PipelineLayoutDescriptor<'a> {
@@ -40,8 +40,8 @@ impl<'a> PipelineLayoutDescriptor<'a> {
     }
 
     #[inline]
-    pub fn set_layout_descriptor(mut self,set_layout_descriptor: &'a DescriptorSetLayout) -> Self {
-        self.set_layout_descriptor = Some(set_layout_descriptor);
+    pub fn resource(mut self, resource: &'a Resource) -> Self {
+        self.set_layout_descriptor = Some(resource);
         self
     }
 
@@ -156,30 +156,30 @@ impl<'a> PipelineVertexInputDescriptor<'a> {
 }
 
 #[derive(Clone,Copy)]
-pub enum DescriptorType {
+pub enum ResourceType {
     UniformBuffer
 }
 
-impl Into<ash::vk::DescriptorType> for DescriptorType {
+impl Into<ash::vk::DescriptorType> for ResourceType {
     fn into(self) -> ash::vk::DescriptorType {
         match self {
-            DescriptorType::UniformBuffer => ash::vk::DescriptorType::UNIFORM_BUFFER
+            ResourceType::UniformBuffer => ash::vk::DescriptorType::UNIFORM_BUFFER
         }
     }
 }
 
-pub struct DescriptorSetLayoutBinding {
+pub struct ResourceLayoutBinding {
     binding: u32,
-    desc_type: DescriptorType,
+    desc_type: ResourceType,
     count: u32,
     flags: ShaderStage
 }
 
-impl DescriptorSetLayoutBinding {
+impl ResourceLayoutBinding {
     pub fn empty() -> Self {
         Self {
             binding: 0,
-            desc_type: DescriptorType::UniformBuffer,
+            desc_type: ResourceType::UniformBuffer,
             count: 0,
             flags: ShaderStage::Vertex,
         }
@@ -190,7 +190,7 @@ impl DescriptorSetLayoutBinding {
         self
     }
 
-    pub fn desc_type(mut self,desc_type: DescriptorType) -> Self {
+    pub fn resource_type(mut self, desc_type: ResourceType) -> Self {
         self.desc_type = desc_type;
         self
     }
@@ -207,12 +207,12 @@ impl DescriptorSetLayoutBinding {
 }
 
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
-pub struct DescriptorSetLayout {
+pub struct Resource {
     inner: ash::vk::DescriptorSetLayout
 }
 
-impl DescriptorSetLayout {
-    pub fn new(device: &Device,descriptor: &DescriptorSetLayoutBinding) -> Self {
+impl Resource {
+    pub fn new(device: &Device, descriptor: &ResourceLayoutBinding) -> Self {
         let bindings = vec![ash::vk::DescriptorSetLayoutBinding::builder().binding(descriptor.binding).descriptor_type(descriptor.desc_type.into()).descriptor_count(descriptor.count).stage_flags(descriptor.flags.into()).build()];
         let create_info = DescriptorSetLayoutCreateInfo::builder().bindings(&bindings).build();
         let inner = unsafe { device.device.create_descriptor_set_layout(&create_info,None) }.unwrap();
