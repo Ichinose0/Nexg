@@ -390,14 +390,13 @@ impl<'a> PipelineDescriptor<'a> {
 }
 
 #[derive(Clone,Copy)]
-pub struct PipelineLayout<'a> {
+pub struct PipelineLayout {
     pub(crate) layout: ash::vk::PipelineLayout,
-    device: &'a Device,
 }
 
-impl<'a> PipelineLayout<'a> {
+impl PipelineLayout {
     #[inline]
-    pub fn new(device: &'a Device, descriptor: &PipelineLayoutDescriptor) -> NxResult<Self> {
+    pub fn new(device: &Device, descriptor: &PipelineLayoutDescriptor) -> NxResult<Self> {
         let mut layout_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]);
         let mut layouts = vec![];
         match descriptor.set_layout_descriptor {
@@ -416,11 +415,11 @@ impl<'a> PipelineLayout<'a> {
             }?,
         };
 
-        Ok(Self { layout, device })
+        Ok(Self { layout })
     }
 }
 
-impl Destroy for PipelineLayout<'_> {
+impl Destroy for PipelineLayout {
     fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
