@@ -146,7 +146,6 @@ impl CommandRecorder {
             device
                 .device
                 .cmd_begin_render_pass(self.buffer, &begin_info, SubpassContents::INLINE);
-            device.device.cmd_end_render_pass(self.buffer);
         }
         Ok(())
     }
@@ -154,6 +153,7 @@ impl CommandRecorder {
     #[inline]
     pub fn end(&self, device: &Device) -> NxResult<()> {
         unsafe {
+            device.device.cmd_end_render_pass(self.buffer);
             match device.device.end_command_buffer(self.buffer) {
                 Ok(_) => Ok(()),
                 Err(e) => match e {
