@@ -1,8 +1,9 @@
+use std::cmp::max;
 use std::ffi::CString;
 
-use ash::vk::{ColorComponentFlags, CullModeFlags, DescriptorSetLayoutCreateInfo, Extent2D, Format, FrontFace, GraphicsPipelineCreateInfo, Offset2D, PipelineCache, PipelineColorBlendAttachmentState, PipelineColorBlendStateCreateInfo, PipelineInputAssemblyStateCreateInfo, PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo, PipelineRasterizationStateCreateInfo, PipelineShaderStageCreateInfo, PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode, PrimitiveTopology, Rect2D, SampleCountFlags, VertexInputAttributeDescription, VertexInputBindingDescription, VertexInputRate, Viewport};
+use ash::vk::{ColorComponentFlags, CullModeFlags, DescriptorPool, DescriptorPoolCreateInfo, DescriptorPoolSize, DescriptorSet, DescriptorSetAllocateInfo, DescriptorSetLayoutCreateInfo, Extent2D, Format, FrontFace, GraphicsPipelineCreateInfo, Offset2D, PipelineCache, PipelineColorBlendAttachmentState, PipelineColorBlendStateCreateInfo, PipelineInputAssemblyStateCreateInfo, PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo, PipelineRasterizationStateCreateInfo, PipelineShaderStageCreateInfo, PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode, PrimitiveTopology, Rect2D, SampleCountFlags, VertexInputAttributeDescription, VertexInputBindingDescription, VertexInputRate, Viewport};
 
-use crate::{Destroy, Device, Instance, NxError, NxResult, RenderPass, Shader, ShaderStage, ShaderStageDescriptor};
+use crate::{Buffer, Destroy, Device, Instance, NxError, NxResult, RenderPass, Shader, ShaderStage, ShaderStageDescriptor};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BindPoint {
@@ -23,7 +24,7 @@ pub struct PipelineLayoutDescriptor<'a> {
     min_depth: f32,
     max_depth: f32,
     renderpass: Option<&'a RenderPass>,
-    set_layout_descriptor: Option<&'a Resource>
+    set_layout_descriptor: Option<&'a ResourceLayout>
 }
 
 impl<'a> PipelineLayoutDescriptor<'a> {
@@ -40,7 +41,7 @@ impl<'a> PipelineLayoutDescriptor<'a> {
     }
 
     #[inline]
-    pub fn resource(mut self, resource: &'a Resource) -> Self {
+    pub fn resource(mut self, resource: &'a ResourceLayout) -> Self {
         self.set_layout_descriptor = Some(resource);
         self
     }
@@ -168,6 +169,120 @@ impl Into<ash::vk::DescriptorType> for ResourceType {
     }
 }
 
+pub struct ResourcePoolSize {
+    resource_type: ResourceType,
+    count: u32
+}
+
+impl ResourcePoolSize {
+    pub fn empty() -> Self {
+        Self {
+            resource_type: ResourceType::UniformBuffer,
+            count: 1
+        }
+    }
+}
+
+pub struct ResourcePoolDescriptor<'a> {
+    pool_sizes: &'a [ResourcePoolSize],
+    max_sets: u32
+}
+
+impl<'a> ResourcePoolDescriptor<'a> {
+    pub fn empty() -> Self {
+        Self {
+            pool_sizes: &[],
+            max_sets: 1
+        }
+    }
+
+    pub fn pool_sizes(mut self,pool_sizes: &'a [ResourcePoolSize]) -> Self {
+        self.pool_sizes = pool_sizes;
+        self
+    }
+
+    pub fn max_sets(mut self,max_sets: u32) -> Self {
+        self.max_sets = max_sets;
+        self
+    }
+}
+
+pub struct ResourcePool {
+    pool: DescriptorPool
+}
+
+impl ResourcePool {
+    pub fn new(device: &Device,descriptor: &ResourcePoolDescriptor) -> Self {
+        let pool_sizes = descriptor.pool_sizes.iter().map(|x| {
+            DescriptorPoolSize::builder().descriptor_count(x.count).ty(x.resource_type.into()).build()
+        }).collect::<Vec<DescriptorPoolSize>>();
+        let create_info = DescriptorPoolCreateInfo::builder().max_sets(descriptor.max_sets).pool_sizes(&pool_sizes).build();
+        let pool = unsafe { device.device.create_descriptor_pool(&create_info,None) }.unwrap();
+        Self {
+            pool
+        }
+    }
+}
+
+#[derive(Clone,Copy)]
+pub struct ResourceBufferDescriptor<'a> {
+    pub(crate) buffer: &'a Buffer,
+    pub(crate) offset: u64,
+    pub(crate) range: usize
+}
+
+impl<'a> ResourceBufferDescriptor<'a> {
+    pub fn new<T>(buffer: &'a Buffer) -> Self {
+        let range = std::mem::size_of::<T>();
+        Self {
+            buffer,
+            offset: 0,
+            range
+        }
+    }
+}
+
+pub struct ResourceUpdateDescriptor<'a> {
+    pub(crate) resource: &'a Resource,
+    pub(crate) binding: u32,
+    pub(crate) array_element: u32,
+    pub(crate) resource_type: ResourceType,
+    pub(crate) buffer_desc: &'a [ResourceBufferDescriptor<'a>]
+}
+
+impl<'a> ResourceUpdateDescriptor<'a> {
+    pub fn new(resource: &'a Resource) -> Self {
+        Self {
+            resource,
+            binding: 0,
+            array_element: 0,
+            resource_type: ResourceType::UniformBuffer,
+            buffer_desc: &[]
+        }
+    }
+
+    pub fn buffer_desc(mut self,buffer_desc: &'a [ResourceBufferDescriptor]) -> Self {
+        self.buffer_desc = buffer_desc;
+        self
+    }
+}
+
+pub struct Resource {
+    pub(crate) descriptor_set: DescriptorSet
+}
+
+impl Resource {
+    pub fn allocate(device: &Device,pool: &ResourcePool,layout: &ResourceLayout) -> Vec<Self> {
+        let alloc_info = DescriptorSetAllocateInfo::builder().set_layouts(&[layout.inner]).descriptor_pool(pool.pool).build();
+        let descriptor_set = unsafe { device.device.allocate_descriptor_sets(&alloc_info) }.unwrap();
+        descriptor_set.iter().map(|x| {
+            Self {
+                descriptor_set: *x
+            }
+        }).collect()
+    }
+}
+
 pub struct ResourceLayoutBinding {
     binding: u32,
     desc_type: ResourceType,
@@ -207,13 +322,16 @@ impl ResourceLayoutBinding {
 }
 
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
-pub struct Resource {
+pub struct ResourceLayout {
     inner: ash::vk::DescriptorSetLayout
 }
 
-impl Resource {
-    pub fn new(device: &Device, descriptor: &ResourceLayoutBinding) -> Self {
-        let bindings = vec![ash::vk::DescriptorSetLayoutBinding::builder().binding(descriptor.binding).descriptor_type(descriptor.desc_type.into()).descriptor_count(descriptor.count).stage_flags(descriptor.flags.into()).build()];
+impl ResourceLayout {
+    pub fn new(device: &Device, descriptor: &[ResourceLayoutBinding]) -> Self {
+        let mut bindings = vec![];
+        for descriptor in descriptor {
+            bindings.push(ash::vk::DescriptorSetLayoutBinding::builder().binding(descriptor.binding).descriptor_type(descriptor.desc_type.into()).descriptor_count(descriptor.count).stage_flags(descriptor.flags.into()).build());
+        }
         let create_info = DescriptorSetLayoutCreateInfo::builder().bindings(&bindings).build();
         let inner = unsafe { device.device.create_descriptor_set_layout(&create_info,None) }.unwrap();
         Self {
@@ -271,8 +389,9 @@ impl<'a> PipelineDescriptor<'a> {
     }
 }
 
+#[derive(Clone,Copy)]
 pub struct PipelineLayout<'a> {
-    layout: ash::vk::PipelineLayout,
+    pub(crate) layout: ash::vk::PipelineLayout,
     device: &'a Device,
 }
 

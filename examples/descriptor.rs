@@ -4,7 +4,7 @@ use std::ffi::c_void;
 use std::mem::offset_of;
 use std::{env, fs::File, io::BufWriter};
 
-use nexg::{Buffer, BufferDescriptor, BufferUsage, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, VertexInputAttributeDescriptor, VertexInputBindingDescriptor};
+use nexg::{Buffer, BufferDescriptor, BufferUsage, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Resource, ResourceBufferDescriptor, ResourceLayout, ResourceLayoutBinding, ResourcePool, ResourcePoolDescriptor, ResourcePoolSize, ResourceType, ResourceUpdateDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, VertexInputAttributeDescriptor, VertexInputBindingDescriptor};
 use png::text_metadata::ZTXtChunk;
 use simple_logger::SimpleLogger;
 
@@ -26,7 +26,7 @@ struct SceneData {
 }
 
 const SCENE_DATA:SceneData = SceneData {
-    rect_center: Vec4(0.3,-0.2,0.0,1.0),
+    rect_center: Vec4(0.3,-0.2,0.0,0.0),
 };
 
 const WIDTH: u32 = 640;
@@ -35,7 +35,7 @@ const HEIGHT: u32 = 480;
 const VERTEX: [Vertex; 4] = [
     Vertex {
         pos: Vec4(-0.5, -0.5, 0.0, 0.0),
-        color: Vec4(1.0, 0.0, 0.0, 1.0),
+        color: Vec4(0.0, 0.0, 1.0, 1.0),
     },
     Vertex {
         pos: Vec4(0.5, 0.5, 0.0, 0.0),
@@ -43,7 +43,7 @@ const VERTEX: [Vertex; 4] = [
     },
     Vertex {
         pos: Vec4(-0.5, 0.5, 0.0, 0.0),
-        color: Vec4(0.0, 0.0, 1.0, 1.0),
+        color: Vec4(1.0, 0.0, 0.0, 1.0),
     },
     Vertex {
         pos: Vec4(0.5, -0.5, 0.0, 0.0),
@@ -119,6 +119,19 @@ fn main() {
     uniform_buffer.write(&device, &SCENE_DATA as *const SceneData as *const c_void).unwrap();
     uniform_buffer.lock(&device);
 
+    let resource_layout_bindings = vec![ResourceLayoutBinding::empty().binding(0).resource_type(ResourceType::UniformBuffer).count(1).shader_stage(ShaderStage::Vertex)];
+    let resource_layout = ResourceLayout::new(&device,&resource_layout_bindings);
+    let pool_sizes = vec![ResourcePoolSize::empty()];
+    let pool_desc = ResourcePoolDescriptor::empty().pool_sizes(&pool_sizes).max_sets(1);
+    let resource_pool = ResourcePool::new(&device,&pool_desc);
+    let resource = Resource::allocate(&device,&resource_pool,&resource_layout);
+
+    let buffer_desc = ResourceBufferDescriptor::new::<SceneData>(&uniform_buffer);
+    let desc = vec![buffer_desc];
+    let update_desc = ResourceUpdateDescriptor::new(&resource[0]).buffer_desc(&desc);
+    device.update_resource(&resource[0],&update_desc);
+
+
     let desc = SubPassDescriptor::empty();
     let subpass = SubPass::new(connecter, &desc);
     let subpasses = &[subpass];
@@ -127,7 +140,7 @@ fn main() {
         .load_op(LoadOp::Clear)
         .store_op(StoreOp::Store);
     let render_pass = RenderPass::new(&device, &desc).unwrap();
-    let desc = PipelineLayoutDescriptor::empty().render_pass(&render_pass);
+    let desc = PipelineLayoutDescriptor::empty().render_pass(&render_pass).resource(&resource_layout);
     let pipeline_layout = PipelineLayout::new(&device, &desc).unwrap();
     let shader_stages = vec![
         ShaderStageDescriptor::empty()
@@ -174,13 +187,14 @@ fn main() {
     let begin_desc = RenderPassBeginDescriptor::empty()
         .width(WIDTH)
         .height(HEIGHT)
-        .clear(0.88, 0.88, 0.88, 1.0)
+        .clear(0.0,0.0,0.0, 1.0)
         .render_pass(&render_pass)
         .frame_buffer(&framebuffer);
     recorders[0].begin(&device, begin_desc);
     recorders[0].bind_pipeline(&device, &pipeline[0]);
     recorders[0].bind_vertex_buffer(&device, &vertex_buffer);
     recorders[0].bind_index_buffer(&device,&index_buffer);
+    recorders[0].bind_resource(&device,&resource[0],&pipeline_layout);
     recorders[0].draw_indexed(&device,INDICES.len() as u32, 1, 0, 0, 0);
     recorders[0].end(&device);
 
