@@ -111,6 +111,39 @@ impl InstanceBuilder {
     }
 }
 
+pub struct RequestConnecterDescriptor {
+    is_graphic_support: bool,
+    is_compute_support: bool,
+    is_transfer_support: bool,
+}
+
+impl RequestConnecterDescriptor {
+    pub fn graphic_support(mut self, is_graphic_support: bool) -> Self {
+        self.is_graphic_support = is_graphic_support;
+        self
+    }
+
+    pub fn compute_support(mut self, is_compute_support: bool) -> Self {
+        self.is_compute_support = is_compute_support;
+        self
+    }
+
+    pub fn transfer_support(mut self, is_transfer_support: bool) -> Self {
+        self.is_transfer_support = is_transfer_support;
+        self
+    }
+}
+
+impl RequestConnecterDescriptor {
+    pub fn new() -> Self {
+        Self {
+            is_graphic_support: true,
+            is_compute_support: true,
+            is_transfer_support: true,
+        }
+    }
+}
+
 pub struct Instance {
     pub(crate) instance: ash::Instance,
     pub(crate) entry: Entry,
@@ -151,6 +184,7 @@ impl Instance {
     ///
     ///  let device = connecter.create_device(&instance, index).unwrap();
     /// ```
+    #[deprecated(since = "0.1.1", note = "Please use request_connecters")]
     pub fn enumerate_connecters(&self) -> NxResult<Vec<DeviceConnecter>> {
         let devices = match unsafe { self.instance.enumerate_physical_devices() } {
             Ok(x) => x,
@@ -158,13 +192,54 @@ impl Instance {
         };
         let devices = devices
             .iter()
-            .map(|x| DeviceConnecter(*x))
+            .map(|x| DeviceConnecter(*x, 0))
             .collect::<Vec<DeviceConnecter>>();
         if !devices.is_empty() {
             Ok(devices)
         } else {
             Err(NxError::NoValue)
         }
+    }
+
+    pub fn request_connecters(
+        &self,
+        descriptors: &[RequestConnecterDescriptor],
+    ) -> NxResult<Vec<DeviceConnecter>> {
+        let mut connecter = vec![];
+        for desc in descriptors {
+            let mut connecters = self.enumerate_connecters()?;
+            let mut index = 0;
+            let mut count = 0;
+            for i in &connecters {
+                let properties = i.get_queue_family_properties(&self).unwrap();
+                for (n, i) in properties.iter().enumerate() {
+                    count = 0;
+                    if i.is_graphic_support() == desc.is_graphic_support {
+                        count += 1;
+                    }
+                    if i.is_compute_support() == desc.is_compute_support {
+                        count += 1;
+                    }
+                    if i.is_transfer_support() == desc.is_transfer_support {
+                        count += 1;
+                    }
+
+                    if count == 3 {
+                        index = n;
+                        break;
+                    }
+                }
+            }
+            if count != 3 {
+                return Err(NxError::NoValue);
+            }
+
+            let mut c = connecters[index];
+            c.1 = index;
+            connecter.push(c);
+        }
+
+        Ok(connecter)
     }
 
     /// Get the first connector.

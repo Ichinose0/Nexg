@@ -148,7 +148,7 @@ impl QueueFamilyProperties {
 
 /// Represents a handle to a physical device.
 #[derive(Clone, Copy)]
-pub struct DeviceConnecter(pub(crate) vk::PhysicalDevice);
+pub struct DeviceConnecter(pub(crate) vk::PhysicalDevice, pub(crate) usize);
 
 impl DeviceConnecter {
     /// Create a device.
@@ -176,6 +176,10 @@ impl DeviceConnecter {
         instance: &Instance,
     ) -> NxResult<Vec<QueueFamilyProperties>> {
         instance.get_queue_family_properties(self.0)
+    }
+
+    pub fn get_queue_family_index(&self) -> usize {
+        self.1
     }
 
     #[doc(hidden)]
