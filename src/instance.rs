@@ -111,6 +111,22 @@ impl InstanceBuilder {
     }
 }
 
+pub struct RequestConnecterDescriptor {
+    is_graphic_support: bool,
+    is_compute_support: bool,
+    is_transfer_support: bool
+}
+
+impl RequestConnecterDescriptor {
+    pub fn new() -> Self {
+        Self {
+            is_graphic_support: true,
+            is_compute_support: true,
+            is_transfer_support: true,
+        }
+    }
+}
+
 pub struct Instance {
     pub(crate) instance: ash::Instance,
     pub(crate) entry: Entry,
@@ -151,6 +167,7 @@ impl Instance {
     ///
     ///  let device = connecter.create_device(&instance, index).unwrap();
     /// ```
+    #[deprecated(since = "0.1.1", note = "Please use request_connecters")]
     pub fn enumerate_connecters(&self) -> NxResult<Vec<DeviceConnecter>> {
         let devices = match unsafe { self.instance.enumerate_physical_devices() } {
             Ok(x) => x,
@@ -165,6 +182,10 @@ impl Instance {
         } else {
             Err(NxError::NoValue)
         }
+    }
+
+    pub fn request_connecters(&self,descriptors: &[RequestConnecterDescriptor]) -> NxResult<Vec<DeviceConnecter>> {
+
     }
 
     /// Get the first connector.
