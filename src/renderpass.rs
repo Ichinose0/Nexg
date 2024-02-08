@@ -7,6 +7,7 @@ use crate::{
     BindPoint, Destroy, Device, DeviceConnecter, FrameBuffer, Instance, NxError, NxResult,
 };
 
+/// Stores information needed to start a render pass.
 #[derive(Clone, Copy)]
 pub struct RenderPassBeginDescriptor<'a> {
     pub(crate) frame_buffer: Option<&'a FrameBuffer>,
@@ -22,6 +23,7 @@ pub struct RenderPassBeginDescriptor<'a> {
 }
 
 impl<'a> RenderPassBeginDescriptor<'a> {
+    /// Initializes a new descriptor with default values.
     pub fn empty() -> Self {
         Self {
             frame_buffer: None,
@@ -37,16 +39,19 @@ impl<'a> RenderPassBeginDescriptor<'a> {
         }
     }
 
+    /// Specifies the width of the RenderPass.
     pub fn width(mut self, width: u32) -> Self {
         self.width = width;
         self
     }
 
+    /// Specifies the height of the RenderPass.
     pub fn height(mut self, height: u32) -> Self {
         self.height = height;
         self
     }
 
+    /// Specify the color when clearing the screen.
     pub fn clear(mut self, r: f32, g: f32, b: f32, a: f32) -> Self {
         self.r = r;
         self.g = g;
@@ -55,11 +60,13 @@ impl<'a> RenderPassBeginDescriptor<'a> {
         self
     }
 
+    #[must_use]
     pub fn frame_buffer(mut self, frame_buffer: &'a FrameBuffer) -> Self {
         self.frame_buffer = Some(frame_buffer);
         self
     }
 
+    #[must_use]
     pub fn render_pass(mut self, render_pass: &'a RenderPass) -> Self {
         self.render_pass = Some(render_pass);
         self
@@ -98,11 +105,13 @@ impl Into<AttachmentStoreOp> for StoreOp {
     }
 }
 
+/// Stores information needed to create a FrameBuffer.
 pub struct SubPassDescriptor {
     bind_point: BindPoint,
 }
 
 impl SubPassDescriptor {
+    /// Initializes a new descriptor with default values.
     #[inline]
     pub fn empty() -> Self {
         Self {
@@ -116,6 +125,11 @@ pub struct SubPass {
 }
 
 impl SubPass {
+    /// Create a new Framebuffer.
+    /// # Arguments
+    ///
+    /// * `connecter` - Appropriate DeviceConnecter.
+    /// * `descriptor` - Appropriate SubPassDescriptor.
     #[inline]
     pub fn new(_connecter: DeviceConnecter, descriptor: &SubPassDescriptor) -> Self {
         let attachment_refs = vec![AttachmentReference::builder()
@@ -130,6 +144,7 @@ impl SubPass {
     }
 }
 
+/// Stores information needed to create a RenderPass.
 pub struct RenderPassDescriptor<'a> {
     load_op: LoadOp,
     store_op: StoreOp,
@@ -137,6 +152,7 @@ pub struct RenderPassDescriptor<'a> {
 }
 
 impl<'a> RenderPassDescriptor<'a> {
+    /// Initializes a new descriptor with default values.
     #[inline]
     pub fn empty() -> Self {
         Self {
@@ -170,6 +186,11 @@ pub struct RenderPass {
 }
 
 impl RenderPass {
+    /// Create a new Framebuffer.
+    /// # Arguments
+    ///
+    /// * `device` - Reference to the appropriate device.
+    /// * `descriptor` - Appropriate RenderPassDescriptor.
     #[inline]
     pub fn new(device: &Device, descriptor: &RenderPassDescriptor) -> NxResult<Self> {
         let subpasses = descriptor

@@ -8,6 +8,8 @@ pub struct QueuePresentDescriptor<'a> {
 }
 
 impl<'a> QueuePresentDescriptor<'a> {
+    /// Initializes a new descriptor with default values.
+    #[inline]
     pub fn empty() -> Self {
         Self {
             wait_semaphores: &[],
@@ -16,16 +18,19 @@ impl<'a> QueuePresentDescriptor<'a> {
         }
     }
 
+    /// Array to waiting semaphore.
     pub fn wait_semaphores(mut self, semaphore: &'a [Semaphore]) -> Self {
         self.wait_semaphores = semaphore;
         self
     }
 
+    /// Array to semaphore to signal state.
     pub fn signal_semaphores(mut self, semaphore: &'a [Semaphore]) -> Self {
         self.signal_semaphores = semaphore;
         self
     }
 
+    /// Queue to present.
     pub fn queue(mut self, queue: &'a Queue) -> Self {
         self.queue = Some(queue);
         self
@@ -39,6 +44,8 @@ pub struct QueueSubmitDescriptor<'a> {
 }
 
 impl<'a> QueueSubmitDescriptor<'a> {
+    /// Initializes a new descriptor with default values.
+    #[inline]
     pub fn empty() -> Self {
         Self {
             wait_semaphores: &[],
@@ -47,16 +54,19 @@ impl<'a> QueueSubmitDescriptor<'a> {
         }
     }
 
+    /// Waiting fence.
     pub fn fence(mut self, fence: &'a crate::Fence) -> Self {
         self.fence = Some(fence);
         self
     }
 
+    /// Array to waiting semaphore.
     pub fn wait_semaphores(mut self, semaphores: &'a [Semaphore]) -> Self {
         self.wait_semaphores = semaphores;
         self
     }
 
+    /// Array to semaphore to signal state.
     pub fn signal_semaphores(mut self, semaphores: &'a [Semaphore]) -> Self {
         self.signal_semaphores = semaphores;
         self
@@ -67,6 +77,7 @@ impl<'a> QueueSubmitDescriptor<'a> {
 pub struct Queue(pub(crate) ash::vk::Queue);
 
 impl Queue {
+    /// Submits the queue.
     #[inline]
     pub fn submit(
         &self,

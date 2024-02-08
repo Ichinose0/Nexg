@@ -1,6 +1,9 @@
-use std::ffi::c_void;
 use crate::{Destroy, Device, Instance, NxError, NxResult};
-use ash::vk::{MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags, MemoryRequirements, PhysicalDeviceMemoryProperties};
+use ash::vk::{
+    MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags, MemoryRequirements,
+    PhysicalDeviceMemoryProperties,
+};
+use std::ffi::c_void;
 
 pub struct DeviceMemory {
     pub(crate) memory: ash::vk::DeviceMemory,
@@ -87,14 +90,11 @@ impl DeviceMemory {
         unsafe { device.device.get_device_memory_commitment(self.memory) }
     }
 
-    pub fn map(&self,device: &Device,size: u64) -> NxResult<*mut c_void> {
+    pub fn map(&self, device: &Device, size: u64) -> NxResult<*mut c_void> {
         match unsafe {
-            device.device.map_memory(
-                self.memory,
-                0,
-                size,
-                MemoryMapFlags::empty(),
-            )
+            device
+                .device
+                .map_memory(self.memory, 0, size, MemoryMapFlags::empty())
         } {
             Ok(x) => Ok(x),
             Err(e) => match e {
@@ -106,7 +106,7 @@ impl DeviceMemory {
         }
     }
 
-    pub fn unmap(&self,device: &Device) {
+    pub fn unmap(&self, device: &Device) {
         unsafe {
             device.device.unmap_memory(self.memory);
         }

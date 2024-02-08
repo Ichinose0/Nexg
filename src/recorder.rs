@@ -1,15 +1,20 @@
-use crate::{Buffer, Destroy, Device, Instance, NxError, NxResult, Pipeline, PipelineLayout, RenderPassBeginDescriptor, Resource};
+use crate::{
+    Buffer, Destroy, Device, Instance, NxError, NxResult, Pipeline, PipelineLayout,
+    RenderPassBeginDescriptor, Resource,
+};
 use ash::vk::{
     ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo,
     CommandBufferLevel, CommandBufferResetFlags, CommandPoolCreateFlags, CommandPoolCreateInfo,
     Extent2D, IndexType, Offset2D, PipelineBindPoint, Rect2D, RenderPassBeginInfo, SubpassContents,
 };
 
+/// Stores information needed to create a CommandPool.
 pub struct CommandPoolDescriptor {
     queue_family_index: Option<usize>,
 }
 
 impl CommandPoolDescriptor {
+    /// Initializes a new descriptor with default values.
     #[inline]
     pub fn empty() -> Self {
         Self {
@@ -17,6 +22,7 @@ impl CommandPoolDescriptor {
         }
     }
 
+    /// Specifies the index of the queue family.
     #[inline]
     pub fn queue_family_index(mut self, queue_family_index: usize) -> Self {
         self.queue_family_index = Some(queue_family_index);
@@ -61,14 +67,23 @@ impl Destroy for CommandPool {
     }
 }
 
+/// Stores information needed to create a CommandRecorder.
 pub struct CommandRecorderDescriptor {
     recorder_count: u32,
 }
 
 impl CommandRecorderDescriptor {
+    /// Initializes a new descriptor with default values.
     #[inline]
     pub fn empty() -> Self {
         Self { recorder_count: 1 }
+    }
+
+    /// Specifies the count of CommandRecorder.
+    #[inline]
+    pub fn recorder_count(mut self,count: u32) -> Self {
+        self.recorder_count = count;
+        self
     }
 }
 
@@ -105,6 +120,7 @@ impl CommandRecorder {
             .collect::<Vec<Self>>())
     }
 
+    /// Starts recording commands.
     #[inline]
     pub fn begin(&self, device: &Device, descriptor: RenderPassBeginDescriptor) -> NxResult<()> {
         let create_info = CommandBufferBeginInfo::builder().build();
@@ -150,6 +166,7 @@ impl CommandRecorder {
         Ok(())
     }
 
+    /// End recording commands.
     #[inline]
     pub fn end(&self, device: &Device) -> NxResult<()> {
         unsafe {
@@ -165,6 +182,7 @@ impl CommandRecorder {
         }
     }
 
+    /// Bind the pipeline.
     #[inline]
     pub fn bind_pipeline(&self, device: &Device, pipeline: &Pipeline) {
         unsafe {
@@ -176,6 +194,7 @@ impl CommandRecorder {
         }
     }
 
+    /// Binds the vertex buffer.
     #[inline]
     pub fn bind_vertex_buffer(&self, device: &Device, buffer: &Buffer) {
         unsafe {
@@ -184,6 +203,8 @@ impl CommandRecorder {
                 .cmd_bind_vertex_buffers(self.buffer, 0, &[buffer.buffer], &[0])
         }
     }
+
+    /// Binds the index buffer.
 
     #[inline]
     pub fn bind_index_buffer(&self, device: &Device, buffer: &Buffer) {
@@ -194,13 +215,22 @@ impl CommandRecorder {
         }
     }
 
+    /// Binds the resource.
     #[inline]
-    pub fn bind_resource(&self, device: &Device,resource: &Resource,layout: &PipelineLayout) {
+    pub fn bind_resource(&self, device: &Device, resource: &Resource, layout: &PipelineLayout) {
         unsafe {
-            device.device.cmd_bind_descriptor_sets(self.buffer,PipelineBindPoint::GRAPHICS,layout.layout,0,&[resource.descriptor_set],&[]);
+            device.device.cmd_bind_descriptor_sets(
+                self.buffer,
+                PipelineBindPoint::GRAPHICS,
+                layout.layout,
+                0,
+                &[resource.descriptor_set],
+                &[],
+            );
         }
     }
 
+    /// Drawing
     #[inline]
     pub fn draw(
         &self,
@@ -221,6 +251,7 @@ impl CommandRecorder {
         }
     }
 
+    /// Used when drawing with an index buffer.
     #[inline]
     pub fn draw_indexed(
         &self,
@@ -243,6 +274,7 @@ impl CommandRecorder {
         }
     }
 
+    /// Reset CommandRecorder.
     #[inline]
     pub fn reset(&self, device: &Device) -> NxResult<()> {
         unsafe {

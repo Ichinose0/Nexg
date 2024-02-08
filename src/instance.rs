@@ -9,7 +9,9 @@ use crate::{vulkan_debug_callback, Device, DeviceConnecter, DeviceFeature};
 
 /// Represents an additional feature of the instance.
 pub struct InstanceFeature {
+    #[doc(hidden)]
     extensions: Vec<*const i8>,
+    #[doc(hidden)]
     device_exts: Vec<DeviceFeature>,
 }
 
@@ -23,8 +25,10 @@ impl InstanceFeature {
         }
     }
 
-    /// Enable Surface.
-    /// "window" feature is required.
+    /// Allows surfaces to be created.
+    /// If this option is not enabled when creating an instance,
+    /// Vulkan will force a termination at its convenience when initializing the surface.
+    /// **"window" feature is required.**
     #[cfg(feature = "window")]
     #[inline]
     pub fn use_surface(
@@ -49,22 +53,27 @@ impl Default for InstanceFeature {
     }
 }
 
+/// Object that allows building windows.
 pub struct InstanceBuilder {
     feature: InstanceFeature,
 }
 
 impl InstanceBuilder {
+    /// Initializes a new builder with default values.
     pub fn new() -> Self {
         Self {
             feature: Default::default(),
         }
     }
 
+    /// Specifies the functionality used by the instance.
     pub fn feature(mut self, feature: InstanceFeature) -> Self {
         self.feature = feature;
         self
     }
 
+    /// Create an instance.
+    /// This will fail if there is insufficient memory or if the device does not support **Vulkan 1.3** or **later**.
     pub fn build(mut self) -> NxResult<Instance> {
         self.feature.extensions.push(DebugUtils::name().as_ptr());
         let entry = Entry::linked();
@@ -116,30 +125,32 @@ impl Instance {
     /// Enumerate available connectors.
     /// You can get the appropriate connector by getting the QueueFamilyProperties from the connector.
     /// # Example
-    ///```
-    /// use nexg::{InstanceBuilder,CommandPoolDescriptor,CommandRecorderDescriptor};
+    /// ```
+    /// use nexg::{InstanceFeature,InstanceBuilder};
     ///
-    ///let instance = InstanceBuilder::new().build();
-    ///let connecters = instance.enumerate_connecters();
-    ///let mut index = 0;
-    ///let mut found_device = false;
-    ///for i in &connecters {
-    ///let properties = i.get_queue_family_properties();
-    ///for i in properties {
-    ///if i.is_compute_support() {
-    ///index = 0;
-    ///found_device = true;
-    ///break;
-    ///}
-    ///}
-    ///}
-    ///if !found_device {
-    ///panic!("No suitable device found.")
-    ///}
+    ///  let feature = InstanceFeature::empty();
+    ///  let instance = InstanceBuilder::new().feature(feature).build().unwrap();
+    ///  let connecters = instance.enumerate_connecters().unwrap();
+    ///  let mut index = 0;
+    ///  let mut found_device = false;
+    ///  for i in &connecters {
+    ///     let properties = i.get_queue_family_properties(&instance).unwrap();
+    ///     for i in properties {
+    ///         if i.is_graphic_support() {
+    ///             index = 0;
+    ///             found_device = true;
+    ///             break;
+    ///         }
+    ///     }
+    ///  }
+    ///  if !found_device {
+    ///     panic!("No suitable device found.")
+    ///  }
     ///
-    ///let connecter = connecters[index];
+    ///  let connecter = connecters[index];
     ///
-    ///```
+    ///  let device = connecter.create_device(&instance, index).unwrap();
+    /// ```
     pub fn enumerate_connecters(&self) -> NxResult<Vec<DeviceConnecter>> {
         let devices = match unsafe { self.instance.enumerate_physical_devices() } {
             Ok(x) => x,
@@ -157,12 +168,14 @@ impl Instance {
     }
 
     /// Get the first connector.
+    #[deprecated(since = "0.1.0", note = "Use enumerate_connecters() to manually get the appropriate one.")]
     pub fn default_connector(&self) -> DeviceConnecter {
         let devices = self.enumerate_connecters().unwrap();
         devices[0]
     }
 
     /// Get the version of Vulkan currently in use.
+    /// This may not be possible to obtain.
     pub fn vulkan_version(&self) -> Option<String> {
         match self.entry.try_enumerate_instance_version() {
             Ok(v) => match v {

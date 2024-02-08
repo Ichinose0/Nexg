@@ -1,21 +1,38 @@
+use crate::{
+    CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy,
+    NxResult, Queue, Resource, ResourceUpdateDescriptor,
+};
 use ash::vk::{DescriptorBufferInfo, WriteDescriptorSet};
-use crate::{CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy, NxResult, Queue, Resource, ResourceUpdateDescriptor};
 
+#[doc(hidden)]
 pub(crate) enum DeviceFeature {
     Swapchain,
 }
 
 #[derive(Clone)]
 pub struct Device {
+    #[doc(hidden)]
     pub(crate) device: ash::Device,
 }
 
 impl Device {
+    #[doc(hidden)]
     pub(crate) fn from(device: ash::Device) -> Self {
         Self { device }
     }
 
     /// Get the queue corresponding to queue_family_index.
+    /// # Example
+    /// ```
+    /// /// Appropriate instance.
+    /// let instance = ..;
+    /// // Index of the appropriate queue family. This must be obtained manually.
+    /// let index = 0;
+    /// // Get DeviceConnecter in some way.
+    /// let connecter = ..;
+    /// let device = connecter.create_device(&instance, index).unwrap();
+    /// let queue = device.get_queue(index);
+    ///```
     pub fn get_queue(&self, queue_family_index: usize) -> Queue {
         Queue(unsafe { self.device.get_device_queue(queue_family_index as u32, 0) })
     }
@@ -34,13 +51,27 @@ impl Device {
         CommandRecorder::create(self, pool, descriptor)
     }
 
-    pub fn update_resource(&self,resource: &Resource,descriptor: &ResourceUpdateDescriptor) {
-        let buffer_info = descriptor.buffer_desc.iter().map(|x| {
-            DescriptorBufferInfo::builder().buffer(x.buffer.buffer).offset(x.offset).range(x.range as u64).build()
-        }).collect::<Vec<DescriptorBufferInfo>>();
-        let desc = WriteDescriptorSet::builder().dst_set(descriptor.resource.descriptor_set).dst_binding(descriptor.binding).dst_array_element(descriptor.array_element).descriptor_type(descriptor.resource_type.into()).buffer_info(&buffer_info).build();
+    pub fn update_resource(&self, resource: &Resource, descriptor: &ResourceUpdateDescriptor) {
+        let buffer_info = descriptor
+            .buffer_desc
+            .iter()
+            .map(|x| {
+                DescriptorBufferInfo::builder()
+                    .buffer(x.buffer.buffer)
+                    .offset(x.offset)
+                    .range(x.range as u64)
+                    .build()
+            })
+            .collect::<Vec<DescriptorBufferInfo>>();
+        let desc = WriteDescriptorSet::builder()
+            .dst_set(descriptor.resource.descriptor_set)
+            .dst_binding(descriptor.binding)
+            .dst_array_element(descriptor.array_element)
+            .descriptor_type(descriptor.resource_type.into())
+            .buffer_info(&buffer_info)
+            .build();
         unsafe {
-            self.device.update_descriptor_sets(&[desc],&[]);
+            self.device.update_descriptor_sets(&[desc], &[]);
         }
     }
 
