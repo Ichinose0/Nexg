@@ -9,7 +9,6 @@ use crate::{
 
 #[derive(Clone, Copy, Debug)]
 pub enum SwapchainState {
-    ///
     Normal,
     SubOptimal,
     Broken,

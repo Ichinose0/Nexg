@@ -244,6 +244,16 @@ impl ResourcePool {
     }
 }
 
+impl Destroy for ResourcePool {
+    fn instance(&self, instance: &Instance) {}
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device.device.destroy_descriptor_pool(self.pool, None);
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct ResourceBufferDescriptor<'a> {
     pub(crate) buffer: &'a Buffer,
@@ -289,6 +299,7 @@ impl<'a> ResourceUpdateDescriptor<'a> {
 
 pub struct Resource {
     pub(crate) descriptor_set: DescriptorSet,
+    pool: DescriptorPool,
 }
 
 impl Resource {
@@ -301,8 +312,23 @@ impl Resource {
             unsafe { device.device.allocate_descriptor_sets(&alloc_info) }.unwrap();
         descriptor_set
             .iter()
-            .map(|x| Self { descriptor_set: *x })
+            .map(|x| Self {
+                descriptor_set: *x,
+                pool: pool.pool,
+            })
             .collect()
+    }
+}
+
+impl Destroy for Resource {
+    fn instance(&self, instance: &Instance) {}
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device
+                .device
+                .free_descriptor_sets(self.pool, &[self.descriptor_set]);
+        }
     }
 }
 
@@ -372,6 +398,18 @@ impl ResourceLayout {
         }
         .unwrap();
         Self { inner }
+    }
+}
+
+impl Destroy for ResourceLayout {
+    fn instance(&self, instance: &Instance) {}
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device
+                .device
+                .destroy_descriptor_set_layout(self.inner, None);
+        }
     }
 }
 
