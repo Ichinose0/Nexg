@@ -185,7 +185,39 @@ impl Instance {
     }
 
     pub fn request_connecters(&self,descriptors: &[RequestConnecterDescriptor]) -> NxResult<Vec<DeviceConnecter>> {
+        let mut connecter = vec![];
+        for desc in descriptors {
+            let connecters = self.enumerate_connecters()?;
+            let mut index = 0;
+            let mut count = 0;
+            for i in &connecters {
+                let properties = i.get_queue_family_properties(&self).unwrap();
+                for (n,i) in properties.iter().enumerate() {
+                    count = 0;
+                    if i.is_graphic_support() == desc.is_graphic_support {
+                        count += 1;
+                    }
+                    if i.is_compute_support() == desc.is_compute_support {
+                        count += 1;
+                    }
+                    if i.is_transfer_support() == desc.is_transfer_support {
+                        count += 1;
+                    }
 
+                    if count == 3 {
+                        index = n;
+                        break;
+                    }
+                }
+            }
+            if count != 3 {
+                return Err(NxError::NoValue);
+            }
+
+            connecter.push(connecters[index]);
+        }
+
+        Ok(connecter)
     }
 
     /// Get the first connector.

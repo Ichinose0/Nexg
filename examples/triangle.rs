@@ -2,15 +2,7 @@ use std::ffi::c_void;
 use std::mem::offset_of;
 use std::{env, fs::File, io::BufWriter};
 
-use nexg::{
-    Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat,
-    Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat,
-    ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor,
-    PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor,
-    RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderStage,
-    ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor,
-    VertexInputAttributeDescriptor, VertexInputBindingDescriptor,
-};
+use nexg::{Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, RequestConnecterDescriptor, Shader, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, VertexInputAttributeDescriptor, VertexInputBindingDescriptor};
 use png::text_metadata::ZTXtChunk;
 use simple_logger::SimpleLogger;
 
@@ -46,24 +38,10 @@ fn main() {
     SimpleLogger::new().init().unwrap();
     let feature = InstanceFeature::empty();
     let instance = InstanceBuilder::new().feature(feature).build().unwrap();
-    let connecters = instance.enumerate_connecters().unwrap();
-    let mut index = 0;
-    let mut found_device = false;
-    for i in &connecters {
-        let properties = i.get_queue_family_properties(&instance).unwrap();
-        for i in properties {
-            if i.is_graphic_support() {
-                index = 0;
-                found_device = true;
-                break;
-            }
-        }
-    }
-    if !found_device {
-        panic!("No suitable device found.")
-    }
-
-    let connecter = connecters[index];
+    let desc = RequestConnecterDescriptor::new();
+    let connecters = instance.request_connecters(&[desc]).unwrap();
+    let connecter = connecters[0];
+    let index = 0;
 
     let device = connecter.create_device(&instance, index).unwrap();
 
