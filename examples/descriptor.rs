@@ -12,7 +12,7 @@ use nexg::{
     RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Resource,
     ResourceBufferDescriptor, ResourceLayout, ResourceLayoutBinding, ResourcePool,
     ResourcePoolDescriptor, ResourcePoolSize, ResourceType, ResourceUpdateDescriptor, Shader,
-    ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor,
+    ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor,
     VertexInputAttributeDescriptor, VertexInputBindingDescriptor,
 };
 use png::text_metadata::ZTXtChunk;
@@ -101,9 +101,9 @@ fn main() {
     let desc = ImageViewDescriptor::empty().format(ImageFormat::R8G8B8A8Unorm);
     let image_view = image.create_image_view(&device, &desc);
 
-    let vertex = Shader::new(&device, Spirv::from_raw(VERTEX_S).unwrap());
+    let vertex = Shader::new(&device, &Spirv::from_raw(VERTEX_S).unwrap());
 
-    let fragment = Shader::new(&device, Spirv::from_raw(FRAGMENT_S).unwrap());
+    let fragment = Shader::new(&device, &Spirv::from_raw(FRAGMENT_S).unwrap());
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
     let vertex_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
@@ -244,9 +244,7 @@ fn main() {
         .unwrap();
 
     let mut writer = encoder.write_header().unwrap();
-    let data = image.map_memory(&device).unwrap();
-    let slice: &[u8] =
-        unsafe { std::slice::from_raw_parts(data as *const u8, (WIDTH * HEIGHT * 4) as usize) };
+    let slice = image.as_raw_data(&device, WIDTH, HEIGHT).unwrap();
     writer.write_image_data(&slice).unwrap(); // Save
 
     // We can add a tEXt/zTXt/iTXt at any point before the encoder is dropped from scope. These chunks will be at the end of the png file.
