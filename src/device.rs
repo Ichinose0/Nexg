@@ -51,7 +51,7 @@ impl Device {
         CommandRecorder::create(self, pool, descriptor)
     }
 
-    pub fn update_resource(&self, resource: &Resource, descriptor: &ResourceUpdateDescriptor) {
+    pub fn update_resource(&self, descriptor: &ResourceUpdateDescriptor) {
         let buffer_info = descriptor
             .buffer_desc
             .iter()

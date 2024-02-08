@@ -283,7 +283,7 @@ impl CommandRecorder {
                 .reset_command_buffer(self.buffer, CommandBufferResetFlags::empty())
             {
                 Ok(_) => Ok(()),
-                Err(e) => Err(NxError::OutOfDeviceMemory),
+                Err(_) => Err(NxError::OutOfDeviceMemory),
             }
         }
     }

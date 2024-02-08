@@ -1,4 +1,3 @@
-use std::cmp::max;
 use std::ffi::CString;
 
 use ash::vk::{
@@ -14,7 +13,7 @@ use ash::vk::{
 };
 
 use crate::{
-    Buffer, Destroy, Device, Instance, NxError, NxResult, RenderPass, Shader, ShaderStage,
+    Buffer, Destroy, Device, Instance, NxError, NxResult, RenderPass, ShaderStage,
     ShaderStageDescriptor,
 };
 
@@ -433,7 +432,7 @@ pub struct PipelineLayout {
 impl PipelineLayout {
     #[inline]
     pub fn new(device: &Device, descriptor: &PipelineLayoutDescriptor) -> NxResult<Self> {
-        let mut layout_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]);
+        let layout_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]);
         let mut layouts = vec![];
         match descriptor.set_layout_descriptor {
             None => {}

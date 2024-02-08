@@ -2,7 +2,7 @@ extern crate nalgebra_glm as glm;
 
 use std::ffi::c_void;
 use std::mem::offset_of;
-use std::{env, fs::File, io::BufWriter};
+use std::{fs::File, io::BufWriter};
 
 use nexg::{
     Buffer, BufferDescriptor, BufferUsage, CommandPoolDescriptor, CommandRecorderDescriptor,
