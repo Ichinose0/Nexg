@@ -83,23 +83,23 @@ impl Into<Format> for ImageFormat {
 
 /// Represents the dimension of the image.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ImageType {
-    e2D,
-    e3D,
+pub enum ImageDimension {
+    D2,
+    D3,
 }
 
-impl Into<ash::vk::ImageType> for ImageType {
+impl Into<ash::vk::ImageType> for ImageDimension {
     fn into(self) -> ash::vk::ImageType {
         match self {
-            ImageType::e2D => ash::vk::ImageType::TYPE_2D,
-            ImageType::e3D => ash::vk::ImageType::TYPE_3D,
+            ImageDimension::D2 => ash::vk::ImageType::TYPE_2D,
+            ImageDimension::D3 => ash::vk::ImageType::TYPE_3D,
         }
     }
 }
 
 /// Stores information needed to create a Image.
 pub struct ImageDescriptor {
-    image_type: ImageType,
+    image_type: ImageDimension,
     extent: Extent3d,
     mip_levels: u32,
     array_layers: u32,
@@ -111,7 +111,7 @@ impl ImageDescriptor {
     /// Initializes a new descriptor with default values.
     pub const fn new() -> Self {
         Self {
-            image_type: ImageType::e2D,
+            image_type: ImageDimension::D2,
             extent: Extent3d::new(100, 100, 1),
             mip_levels: 1,
             array_layers: 1,
@@ -121,7 +121,7 @@ impl ImageDescriptor {
 
     #[inline]
     /// Specifies the dimension of the Image.
-    pub fn image_type(mut self, image_type: ImageType) -> Self {
+    pub fn image_type(mut self, image_type: ImageDimension) -> Self {
         self.image_type = image_type;
         self
     }
@@ -215,7 +215,9 @@ impl Image {
                 let slice: &[u8] = unsafe {
                     std::slice::from_raw_parts(data as *const u8, (width * height * 4) as usize)
                 };
-                Ok(slice.to_vec())
+                let data = slice.to_vec();
+                x.unmap(&device);
+                Ok(data)
             }
         }
     }
