@@ -2,7 +2,15 @@ use std::ffi::c_void;
 use std::mem::offset_of;
 use std::{env, fs::File, io::BufWriter};
 
-use nexg::{Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, RequestConnecterDescriptor, Shader, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, VertexInputAttributeDescriptor, VertexInputBindingDescriptor};
+use nexg::{
+    Buffer, BufferDescriptor, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat,
+    Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat,
+    ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor,
+    PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor,
+    RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, RequestConnecterDescriptor,
+    Shader, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor,
+    VertexInputAttributeDescriptor, VertexInputBindingDescriptor,
+};
 use png::text_metadata::ZTXtChunk;
 use simple_logger::SimpleLogger;
 
@@ -38,10 +46,13 @@ fn main() {
     SimpleLogger::new().init().unwrap();
     let feature = InstanceFeature::empty();
     let instance = InstanceBuilder::new().feature(feature).build().unwrap();
-    let desc = RequestConnecterDescriptor::new();
+    let desc = RequestConnecterDescriptor::new()
+        .graphic_support(true)
+        .compute_support(true)
+        .transfer_support(true);
     let connecters = instance.request_connecters(&[desc]).unwrap();
     let connecter = connecters[0];
-    let index = 0;
+    let index = connecter.get_queue_family_index();
 
     let device = connecter.create_device(&instance, index).unwrap();
 

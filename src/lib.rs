@@ -148,7 +148,7 @@ impl QueueFamilyProperties {
 
 /// Represents a handle to a physical device.
 #[derive(Clone, Copy)]
-pub struct DeviceConnecter(pub(crate) vk::PhysicalDevice,pub(crate) usize);
+pub struct DeviceConnecter(pub(crate) vk::PhysicalDevice, pub(crate) usize);
 
 impl DeviceConnecter {
     /// Create a device.

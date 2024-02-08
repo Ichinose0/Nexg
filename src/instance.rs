@@ -114,7 +114,24 @@ impl InstanceBuilder {
 pub struct RequestConnecterDescriptor {
     is_graphic_support: bool,
     is_compute_support: bool,
-    is_transfer_support: bool
+    is_transfer_support: bool,
+}
+
+impl RequestConnecterDescriptor {
+    pub fn graphic_support(mut self, is_graphic_support: bool) -> Self {
+        self.is_graphic_support = is_graphic_support;
+        self
+    }
+
+    pub fn compute_support(mut self, is_compute_support: bool) -> Self {
+        self.is_compute_support = is_compute_support;
+        self
+    }
+
+    pub fn transfer_support(mut self, is_transfer_support: bool) -> Self {
+        self.is_transfer_support = is_transfer_support;
+        self
+    }
 }
 
 impl RequestConnecterDescriptor {
@@ -175,7 +192,7 @@ impl Instance {
         };
         let devices = devices
             .iter()
-            .map(|x| DeviceConnecter(*x,0))
+            .map(|x| DeviceConnecter(*x, 0))
             .collect::<Vec<DeviceConnecter>>();
         if !devices.is_empty() {
             Ok(devices)
@@ -184,7 +201,10 @@ impl Instance {
         }
     }
 
-    pub fn request_connecters(&self,descriptors: &[RequestConnecterDescriptor]) -> NxResult<Vec<DeviceConnecter>> {
+    pub fn request_connecters(
+        &self,
+        descriptors: &[RequestConnecterDescriptor],
+    ) -> NxResult<Vec<DeviceConnecter>> {
         let mut connecter = vec![];
         for desc in descriptors {
             let mut connecters = self.enumerate_connecters()?;
@@ -192,7 +212,7 @@ impl Instance {
             let mut count = 0;
             for i in &connecters {
                 let properties = i.get_queue_family_properties(&self).unwrap();
-                for (n,i) in properties.iter().enumerate() {
+                for (n, i) in properties.iter().enumerate() {
                     count = 0;
                     if i.is_graphic_support() == desc.is_graphic_support {
                         count += 1;
