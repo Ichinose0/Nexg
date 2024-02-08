@@ -1,6 +1,6 @@
 use crate::{
     CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy,
-    NxResult, Queue, Resource, ResourceUpdateDescriptor,
+    NxResult, Queue, ResourceUpdateDescriptor,
 };
 use ash::vk::{DescriptorBufferInfo, WriteDescriptorSet};
 
@@ -51,7 +51,7 @@ impl Device {
         CommandRecorder::create(self, pool, descriptor)
     }
 
-    pub fn update_resource(&self, resource: &Resource, descriptor: &ResourceUpdateDescriptor) {
+    pub fn update_resource(&self, descriptor: &ResourceUpdateDescriptor) {
         let buffer_info = descriptor
             .buffer_desc
             .iter()

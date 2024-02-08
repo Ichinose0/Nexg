@@ -2,7 +2,7 @@ extern crate nalgebra_glm as glm;
 
 use std::ffi::c_void;
 use std::mem::offset_of;
-use std::{env, fs::File, io::BufWriter};
+use std::{fs::File, io::BufWriter};
 
 use nexg::{
     Buffer, BufferDescriptor, BufferUsage, CommandPoolDescriptor, CommandRecorderDescriptor,
@@ -144,7 +144,7 @@ fn main() {
     let buffer_desc = ResourceBufferDescriptor::new::<SceneData>(&uniform_buffer);
     let desc = vec![buffer_desc];
     let update_desc = ResourceUpdateDescriptor::new(&resource[0]).buffer_desc(&desc);
-    device.update_resource(&resource[0], &update_desc);
+    device.update_resource(&update_desc);
 
     let desc = SubPassDescriptor::empty();
     let subpass = SubPass::new(connecter, &desc);

@@ -1,4 +1,3 @@
-use std::cmp::max;
 use std::ffi::CString;
 
 use ash::vk::{
@@ -14,7 +13,7 @@ use ash::vk::{
 };
 
 use crate::{
-    Buffer, Destroy, Device, Instance, NxError, NxResult, RenderPass, Shader, ShaderStage,
+    Buffer, Destroy, Device, Instance, NxError, NxResult, RenderPass, ShaderStage,
     ShaderStageDescriptor,
 };
 
@@ -245,6 +244,16 @@ impl ResourcePool {
     }
 }
 
+impl Destroy for ResourcePool {
+    fn instance(&self, _: &Instance) {}
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device.device.destroy_descriptor_pool(self.pool, None);
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct ResourceBufferDescriptor<'a> {
     pub(crate) buffer: &'a Buffer,
@@ -290,6 +299,7 @@ impl<'a> ResourceUpdateDescriptor<'a> {
 
 pub struct Resource {
     pub(crate) descriptor_set: DescriptorSet,
+    pool: DescriptorPool,
 }
 
 impl Resource {
@@ -302,8 +312,23 @@ impl Resource {
             unsafe { device.device.allocate_descriptor_sets(&alloc_info) }.unwrap();
         descriptor_set
             .iter()
-            .map(|x| Self { descriptor_set: *x })
+            .map(|x| Self {
+                descriptor_set: *x,
+                pool: pool.pool,
+            })
             .collect()
+    }
+}
+
+impl Destroy for Resource {
+    fn instance(&self, _: &Instance) {}
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device
+                .device
+                .free_descriptor_sets(self.pool, &[self.descriptor_set]);
+        }
     }
 }
 
@@ -376,6 +401,18 @@ impl ResourceLayout {
     }
 }
 
+impl Destroy for ResourceLayout {
+    fn instance(&self, _: &Instance) {}
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device
+                .device
+                .destroy_descriptor_set_layout(self.inner, None);
+        }
+    }
+}
+
 pub struct PipelineDescriptor<'a> {
     width: u32,
     height: u32,
@@ -433,7 +470,7 @@ pub struct PipelineLayout {
 impl PipelineLayout {
     #[inline]
     pub fn new(device: &Device, descriptor: &PipelineLayoutDescriptor) -> NxResult<Self> {
-        let mut layout_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]);
+        let layout_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]);
         let mut layouts = vec![];
         match descriptor.set_layout_descriptor {
             None => {}
