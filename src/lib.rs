@@ -1,3 +1,52 @@
+//! <div align="center">
+//!
+//! # Nexg
+//!
+//! ## **Low-level fast GPU Api**
+//!
+//! ![GitHub License](https://img.shields.io/github/license/Ichinose0/Nexg)
+//! ![GitHub top language](https://img.shields.io/github/languages/top/Ichinose0/Gallium?logo=rust&logoColor=white&label=Rust&color=rgb(255%2C60%2C60))
+//! [![dependency status](https://deps.rs/repo/github/linebender/vello/status.svg)](https://deps.rs/repo/github/Ichinose0/Nexg)
+//! ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Ichinose0/Nexg)
+//! ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Ichinose0/Nexg/rust.yml)
+//! </div>
+//!
+//! # Set up Device
+//!
+//! ```
+//! use nexg::{InstanceFeature,InstanceBuilder};
+//!
+//!  let feature = InstanceFeature::empty();
+//!  let instance = InstanceBuilder::new().feature(feature).build().unwrap();
+//!  let connecters = instance.enumerate_connecters().unwrap();
+//!  let mut index = 0;
+//!  let mut found_device = false;
+//!  for i in &connecters {
+//!     let properties = i.get_queue_family_properties(&instance).unwrap();
+//!     for i in properties {
+//!         if i.is_graphic_support() {
+//!             index = 0;
+//!             found_device = true;
+//!             break;
+//!         }
+//!     }
+//!  }
+//!  if !found_device {
+//!     panic!("No suitable device found.")
+//!  }
+//!
+//!  let connecter = connecters[index];
+//!
+//!  let device = connecter.create_device(&instance, index).unwrap();
+//! ```
+//!
+//! ## Examples
+//!
+//! ### Triangle
+//! **[Code](https://github.com/Ichinose0/Gallium/blob/main/examples/triangle.rs)**
+//!
+//! ![triangle](https://github.com/Ichinose0/Nexg/blob/main/media/img/triangle.png?raw=true)
+
 #[macro_use]
 extern crate log;
 
@@ -13,6 +62,7 @@ mod fence;
 mod frame_buffer;
 mod image;
 mod instance;
+#[doc(hidden)]
 mod mem;
 mod pipeline;
 mod queue;
@@ -49,6 +99,7 @@ pub type NxResult<T> = std::result::Result<T, NxError>;
 
 #[derive(Debug, Error)]
 pub enum NxError {
+    /// Unknown error. Usually does not occur.
     #[error("Unknown error")]
     Unknown,
     #[error("Nothing of value could be obtained.")]
@@ -79,23 +130,28 @@ impl QueueFamilyProperties {
         self.queue_count
     }
 
+    /// Check to see if the graphic is supported
     pub fn is_graphic_support(&self) -> bool {
         self.graphic_support
     }
 
+    /// Check to see if the compute is supported
     pub fn is_compute_support(&self) -> bool {
         self.compute_support
     }
 
+    /// Check to see if the transfer is supported
     pub fn is_transfer_support(&self) -> bool {
         self.transfer_support
     }
 }
 
+/// Represents a handle to a physical device.
 #[derive(Clone, Copy)]
 pub struct DeviceConnecter(pub(crate) vk::PhysicalDevice);
 
 impl DeviceConnecter {
+    /// Create a device.
     pub fn create_device(self, instance: &Instance, queue_family_index: usize) -> NxResult<Device> {
         let extensions = &instance
             .device_exts
@@ -269,8 +325,12 @@ unsafe extern "system" fn vulkan_debug_callback(
     vk::FALSE
 }
 
+/// Implement on objects that need to be destroyed.
+/// They are called from the instance or from the destroy method of the device.
 pub trait Destroy {
+    /// Destroy objects using instance.
     fn instance(&self, instance: &Instance);
+    /// Destroy objects using device.
     fn device(&self, device: &Device);
 }
 

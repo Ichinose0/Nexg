@@ -1,4 +1,7 @@
-use crate::{Buffer, Destroy, Device, Instance, NxError, NxResult, Pipeline, PipelineLayout, RenderPassBeginDescriptor, Resource};
+use crate::{
+    Buffer, Destroy, Device, Instance, NxError, NxResult, Pipeline, PipelineLayout,
+    RenderPassBeginDescriptor, Resource,
+};
 use ash::vk::{
     ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo,
     CommandBufferLevel, CommandBufferResetFlags, CommandPoolCreateFlags, CommandPoolCreateInfo,
@@ -195,9 +198,16 @@ impl CommandRecorder {
     }
 
     #[inline]
-    pub fn bind_resource(&self, device: &Device,resource: &Resource,layout: &PipelineLayout) {
+    pub fn bind_resource(&self, device: &Device, resource: &Resource, layout: &PipelineLayout) {
         unsafe {
-            device.device.cmd_bind_descriptor_sets(self.buffer,PipelineBindPoint::GRAPHICS,layout.layout,0,&[resource.descriptor_set],&[]);
+            device.device.cmd_bind_descriptor_sets(
+                self.buffer,
+                PipelineBindPoint::GRAPHICS,
+                layout.layout,
+                0,
+                &[resource.descriptor_set],
+                &[],
+            );
         }
     }
 

@@ -7,18 +7,6 @@ use std::io::{Cursor, Read};
 
 use crate::{Destroy, Device, Instance, NxError, NxResult};
 
-///Indicates shader type
-///
-/// # Value Meaning
-/// * `Vertex` - Vertex shader.
-/// * `Fragment` - Fragment shader.
-#[derive(Clone, Copy, Debug)]
-#[deprecated(since = "0.0.5", note = "This enumerator is no longer needed")]
-pub enum ShaderKind {
-    Vertex,
-    Fragment,
-}
-
 /// Represents a Spir-V intermediate representation
 ///
 /// This structure contains binary data that has been processed so that Vulkan can read it
@@ -57,6 +45,10 @@ impl Spirv {
         Ok(Self { data: spirv })
     }
 
+    /// Process the spv file so that Vulkan can read it
+    /// # Arguments
+    ///
+    /// * `data` - Raw binary data.
     pub fn from_raw(data: &[u8]) -> NxResult<Self> {
         let mut spirv_file = Cursor::new(data);
         let spirv = match read_spv(&mut spirv_file) {
@@ -77,7 +69,7 @@ pub struct Shader {
 }
 
 impl Shader {
-    pub fn new(device: &Device, spirv: Spirv) -> Shader {
+    pub fn new(device: &Device, spirv: &Spirv) -> Shader {
         let shader_create_info = ShaderModuleCreateInfo::builder().code(&spirv.data).build();
         let shader = unsafe {
             device
@@ -99,9 +91,12 @@ impl Destroy for Shader {
     }
 }
 
+/// Indicates shader type.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ShaderStage {
+    /// Vertex shader
     Vertex,
+    /// Fragment shader
     Fragment,
 }
 
@@ -114,13 +109,19 @@ impl Into<ShaderStageFlags> for ShaderStage {
     }
 }
 
+/// Register shader information.
+/// Required for pipeline creation.
 pub struct ShaderStageDescriptor<'a> {
+    #[doc(hidden)]
     pub(crate) shaders: Option<&'a Shader>,
+    #[doc(hidden)]
     pub(crate) entry_point: &'a str,
+    #[doc(hidden)]
     pub(crate) stage: ShaderStage,
 }
 
 impl<'a> ShaderStageDescriptor<'a> {
+    /// Create an empty descriptor.
     pub fn empty() -> Self {
         Self {
             shaders: None,
@@ -129,16 +130,19 @@ impl<'a> ShaderStageDescriptor<'a> {
         }
     }
 
+    /// Shader to be registered.
     pub fn shaders(mut self, shaders: &'a Shader) -> Self {
         self.shaders = Some(shaders);
         self
     }
 
+    /// Entry point name of shader.
     pub fn entry_point(mut self, entry_point: &'a str) -> Self {
         self.entry_point = entry_point;
         self
     }
 
+    /// Shader stage.
     pub fn stage(mut self, stage: ShaderStage) -> Self {
         self.stage = stage;
         self
