@@ -245,7 +245,7 @@ impl ResourcePool {
 }
 
 impl Destroy for ResourcePool {
-    fn instance(&self, instance: &Instance) {}
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
@@ -321,7 +321,7 @@ impl Resource {
 }
 
 impl Destroy for Resource {
-    fn instance(&self, instance: &Instance) {}
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
@@ -402,7 +402,7 @@ impl ResourceLayout {
 }
 
 impl Destroy for ResourceLayout {
-    fn instance(&self, instance: &Instance) {}
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {

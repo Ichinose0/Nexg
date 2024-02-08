@@ -1,6 +1,6 @@
 use crate::{
     CommandPool, CommandPoolDescriptor, CommandRecorder, CommandRecorderDescriptor, Destroy,
-    NxResult, Queue, Resource, ResourceUpdateDescriptor,
+    NxResult, Queue, ResourceUpdateDescriptor,
 };
 use ash::vk::{DescriptorBufferInfo, WriteDescriptorSet};
 
