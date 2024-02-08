@@ -175,7 +175,7 @@ impl Instance {
         };
         let devices = devices
             .iter()
-            .map(|x| DeviceConnecter(*x))
+            .map(|x| DeviceConnecter(*x,0))
             .collect::<Vec<DeviceConnecter>>();
         if !devices.is_empty() {
             Ok(devices)
@@ -187,7 +187,7 @@ impl Instance {
     pub fn request_connecters(&self,descriptors: &[RequestConnecterDescriptor]) -> NxResult<Vec<DeviceConnecter>> {
         let mut connecter = vec![];
         for desc in descriptors {
-            let connecters = self.enumerate_connecters()?;
+            let mut connecters = self.enumerate_connecters()?;
             let mut index = 0;
             let mut count = 0;
             for i in &connecters {
@@ -214,7 +214,9 @@ impl Instance {
                 return Err(NxError::NoValue);
             }
 
-            connecter.push(connecters[index]);
+            let mut c = connecters[index];
+            c.1 = index;
+            connecter.push(c);
         }
 
         Ok(connecter)
