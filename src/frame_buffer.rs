@@ -2,6 +2,7 @@ use ash::vk::FramebufferCreateInfo;
 
 use crate::{Destroy, Device, ImageView, Instance, NxError, NxResult, RenderPass};
 
+/// Stores information needed to create a FrameBuffer.
 pub struct FrameBufferDescriptor<'a> {
     width: u32,
     height: u32,
@@ -11,6 +12,7 @@ pub struct FrameBufferDescriptor<'a> {
 
 impl<'a> FrameBufferDescriptor<'a> {
     #[inline]
+    /// Initializes a new descriptor with default values.
     pub const fn empty() -> Self {
         Self {
             width: 100,
@@ -21,24 +23,30 @@ impl<'a> FrameBufferDescriptor<'a> {
     }
 
     #[inline]
+    /// Specifies the width of the FrameBuffer.
     pub fn width(mut self, width: u32) -> Self {
         self.width = width;
         self
     }
 
     #[inline]
+    /// Specifies the height of the FrameBuffer.
     pub fn height(mut self, height: u32) -> Self {
         self.height = height;
         self
     }
 
     #[inline]
+    #[must_use]
+    /// ImageView used to create the FrameBuffer.
     pub fn image_view(mut self, image_view: &'a ImageView) -> Self {
         self.image_view = Some(image_view);
         self
     }
 
     #[inline]
+    #[must_use]
+    /// RenderPass used to create the FrameBuffer.
     pub fn render_pass(mut self, render_pass: &'a RenderPass) -> Self {
         self.render_pass = Some(render_pass);
         self
@@ -51,6 +59,11 @@ pub struct FrameBuffer {
 
 impl FrameBuffer {
     #[inline]
+    /// Create a new Framebuffer.
+    /// # Arguments
+    ///
+    /// * `device` - Reference to the appropriate device.
+    /// * `descriptor` - Appropriate FenceDescriptor.
     pub fn new(device: &Device, descriptor: &FrameBufferDescriptor) -> NxResult<Self> {
         let render_pass = descriptor.render_pass.unwrap();
         let image_view = descriptor.image_view.unwrap();

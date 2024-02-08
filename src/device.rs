@@ -11,6 +11,7 @@ pub(crate) enum DeviceFeature {
 
 #[derive(Clone)]
 pub struct Device {
+    #[doc(hidden)]
     pub(crate) device: ash::Device,
 }
 
@@ -21,6 +22,17 @@ impl Device {
     }
 
     /// Get the queue corresponding to queue_family_index.
+    /// # Example
+    /// ```
+    /// /// Appropriate instance.
+    /// let instance = ..;
+    /// // Index of the appropriate queue family. This must be obtained manually.
+    /// let index = 0;
+    /// // Get DeviceConnecter in some way.
+    /// let connecter = ..;
+    /// let device = connecter.create_device(&instance, index).unwrap();
+    /// let queue = device.get_queue(index);
+    ///```
     pub fn get_queue(&self, queue_family_index: usize) -> Queue {
         Queue(unsafe { self.device.get_device_queue(queue_family_index as u32, 0) })
     }

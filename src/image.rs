@@ -9,6 +9,7 @@ use ash::vk::{
     MemoryMapFlags, SampleCountFlags, SharingMode,
 };
 
+/// Indicates the format of the image.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ImageFormat {
     R8G8B8A8Unorm,
@@ -80,6 +81,7 @@ impl Into<Format> for ImageFormat {
     }
 }
 
+/// Represents the dimension of the image.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ImageType {
     e2D,
@@ -95,6 +97,7 @@ impl Into<ash::vk::ImageType> for ImageType {
     }
 }
 
+/// Stores information needed to create a Image.
 pub struct ImageDescriptor {
     image_type: ImageType,
     extent: Extent3d,
@@ -105,6 +108,7 @@ pub struct ImageDescriptor {
 
 impl ImageDescriptor {
     #[inline]
+    /// Initializes a new descriptor with default values.
     pub const fn new() -> Self {
         Self {
             image_type: ImageType::e2D,
@@ -116,18 +120,21 @@ impl ImageDescriptor {
     }
 
     #[inline]
+    /// Specifies the dimension of the Image.
     pub fn image_type(mut self, image_type: ImageType) -> Self {
         self.image_type = image_type;
         self
     }
 
     #[inline]
+    /// Specifies the extent of the Image.
     pub fn extent(mut self, extent: Extent3d) -> Self {
         self.extent = extent;
         self
     }
 
     #[inline]
+    /// Specifies the format of the Image.
     pub fn format(mut self, format: ImageFormat) -> Self {
         self.format = format;
         self
@@ -141,6 +148,13 @@ pub struct Image {
 }
 
 impl Image {
+    /// Create a new Image.
+    /// # Arguments
+    ///
+    /// * `instance` - appropriate Instance.
+    /// * `device` - Reference to the appropriate device.
+    /// * `connecter` - Appropriate device connecter.
+    /// * `descriptor` - Appropriate ImageDescriptor.
     pub fn create(
         instance: &Instance,
         device: &Device,
@@ -171,6 +185,7 @@ impl Image {
         })
     }
 
+    /// Maps the memory of the image
     pub fn map_memory(&self, device: &Device) -> NxResult<*mut c_void> {
         match unsafe {
             device.device.map_memory(
@@ -190,6 +205,7 @@ impl Image {
         }
     }
 
+    /// Create a image view from self.
     pub fn create_image_view(
         &self,
         device: &Device,
@@ -198,6 +214,7 @@ impl Image {
         ImageView::new(device, &self, &descriptor)
     }
 
+    #[doc(hidden)]
     pub(crate) fn from_raw(image: ash::vk::Image) -> Self {
         Self {
             image,
@@ -232,6 +249,7 @@ pub struct ImageView {
 
 impl ImageView {
     #[inline]
+    #[doc(hidden)]
     pub(crate) fn new(device: &Device, image: &Image, descriptor: &ImageViewDescriptor) -> Self {
         let create_info = ImageViewCreateInfo::builder()
             .image(image.image)
