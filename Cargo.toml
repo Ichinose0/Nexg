@@ -9,6 +9,8 @@ license = "MIT"
 repository = "https://github.com/Ichinose0/Nexg"
 readme = "README.md"
 
+exclude = [".idea/*","media/*"]
+
 [badges]
 maintenance = { status = "actively-developed" }
 
