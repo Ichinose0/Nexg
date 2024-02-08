@@ -81,7 +81,7 @@ impl CommandRecorderDescriptor {
 
     /// Specifies the count of CommandRecorder.
     #[inline]
-    pub fn recorder_count(mut self,count: u32) -> Self {
+    pub fn recorder_count(mut self, count: u32) -> Self {
         self.recorder_count = count;
         self
     }

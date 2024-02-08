@@ -144,6 +144,7 @@ impl ImageDescriptor {
 pub struct Image {
     image: ash::vk::Image,
     memory: Option<DeviceMemory>,
+
     size: Option<u64>,
 }
 
@@ -185,6 +186,7 @@ impl Image {
         })
     }
 
+    #[deprecated(since = "0.1.0", note = "Please use as_raw_data()")]
     /// Maps the memory of the image
     pub fn map_memory(&self, device: &Device) -> NxResult<*mut c_void> {
         match unsafe {
@@ -202,6 +204,19 @@ impl Image {
                 ash::vk::Result::ERROR_MEMORY_MAP_FAILED => Err(NxError::MemoryMapFailed),
                 _ => Err(NxError::Unknown),
             }?,
+        }
+    }
+
+    pub fn as_raw_data(&self, device: &Device, width: u32, height: u32) -> NxResult<Vec<u8>> {
+        match self.memory.as_ref() {
+            None => Err(NxError::Unknown),
+            Some(x) => {
+                let data = x.map(&device, self.size.unwrap())?;
+                let slice: &[u8] = unsafe {
+                    std::slice::from_raw_parts(data as *const u8, (width * height * 4) as usize)
+                };
+                Ok(slice.to_vec())
+            }
         }
     }
 

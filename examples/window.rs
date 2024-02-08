@@ -4,8 +4,8 @@ use nexg::{
     InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout,
     PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueuePresentDescriptor,
     QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Semaphore,
-    SemaphoreDescriptor, Shader, ShaderKind, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp,
-    SubPass, SubPassDescriptor, Surface, Swapchain, VertexInputAttributeDescriptor,
+    SemaphoreDescriptor, Shader, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass,
+    SubPassDescriptor, Surface, Swapchain, VertexInputAttributeDescriptor,
     VertexInputBindingDescriptor,
 };
 use simple_logger::SimpleLogger;
@@ -98,7 +98,7 @@ fn main() {
 
     let vertex = Shader::new(
         &device,
-        Spirv::new(concat!(
+        &Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.vert.spv"
         ))
@@ -107,7 +107,7 @@ fn main() {
 
     let fragment = Shader::new(
         &device,
-        Spirv::new(concat!(
+        &Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.frag.spv"
         ))

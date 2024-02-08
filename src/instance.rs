@@ -168,7 +168,10 @@ impl Instance {
     }
 
     /// Get the first connector.
-    #[deprecated(since = "0.1.0", note = "Use enumerate_connecters() to manually get the appropriate one.")]
+    #[deprecated(
+        since = "0.1.0",
+        note = "Use enumerate_connecters() to manually get the appropriate one."
+    )]
     pub fn default_connector(&self) -> DeviceConnecter {
         let devices = self.enumerate_connecters().unwrap();
         devices[0]

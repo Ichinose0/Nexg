@@ -7,7 +7,7 @@ use nexg::{
     DataFormat, Extent3d, FrameBuffer, FrameBufferDescriptor, Image, ImageDescriptor, ImageFormat,
     ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor,
     PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueueSubmitDescriptor,
-    RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderKind, ShaderStage,
+    RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, Shader, ShaderStage,
     ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor,
     VertexInputAttributeDescriptor, VertexInputBindingDescriptor,
 };
@@ -85,7 +85,7 @@ fn main() {
 
     let vertex = Shader::new(
         &device,
-        Spirv::new(concat!(
+        &Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.vert.spv"
         ))
@@ -94,7 +94,7 @@ fn main() {
 
     let fragment = Shader::new(
         &device,
-        Spirv::new(concat!(
+        &Spirv::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/shader/shader.frag.spv"
         ))
@@ -207,9 +207,7 @@ fn main() {
         .unwrap();
 
     let mut writer = encoder.write_header().unwrap();
-    let data = image.map_memory(&device).unwrap();
-    let slice: &[u8] =
-        unsafe { std::slice::from_raw_parts(data as *const u8, (WIDTH * HEIGHT * 4) as usize) };
+    let slice = image.as_raw_data(&device, WIDTH, HEIGHT).unwrap();
     writer.write_image_data(&slice).unwrap(); // Save
 
     // We can add a tEXt/zTXt/iTXt at any point before the encoder is dropped from scope. These chunks will be at the end of the png file.
