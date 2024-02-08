@@ -33,4 +33,4 @@ It is an API that makes it easier to use and **optimize Vulkan's functionality**
  - Fast API with low overhead
 
 # License
-Gallium is licensed under MIT LICENSE
+Nexg is licensed under MIT LICENSE

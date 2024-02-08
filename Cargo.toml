@@ -3,6 +3,15 @@ name = "nexg"
 version = "0.1.0"
 edition = "2021"
 
+description = "Nexg is a pure-rust library that makes coding Vulkan functionality easier and more Rust-like."
+keywords = ["graphics","vulkan"]
+license = "MIT"
+repository = "https://github.com/Ichinose0/Nexg"
+readme = "README.md"
+
+[badges]
+maintenance = { status = "actively-developed" }
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
