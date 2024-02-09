@@ -1,5 +1,5 @@
 use crate::mem::DeviceMemory;
-use crate::{Device, DeviceConnecter, Instance, NxError, NxResult};
+use crate::{Destroy, Device, DeviceConnecter, Instance, NxError, NxResult};
 use ash::vk::{BufferCreateInfo, BufferUsageFlags, MappedMemoryRange, MemoryMapFlags, SharingMode};
 use std::ffi::c_void;
 
@@ -119,6 +119,19 @@ impl Buffer {
     pub fn lock(&self, device: &Device) {
         unsafe {
             device.device.unmap_memory(self.memory.memory);
+        }
+    }
+}
+
+impl Destroy for Buffer {
+    fn instance(&self, instance: &Instance) {
+
+    }
+
+    fn device(&self, device: &Device) {
+        unsafe {
+            device.device.destroy_buffer(self.buffer,None);
+            device.destroy(&self.memory);
         }
     }
 }

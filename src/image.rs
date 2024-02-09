@@ -302,7 +302,12 @@ impl Destroy for Image {
         unsafe {
             device.device.destroy_image(self.image, None);
         }
-        device.destroy(self.memory.as_ref().unwrap());
+        match self.memory.as_ref() {
+            None => {}
+            Some(x) => {
+                device.destroy(x);
+            }
+        }
     }
 }
 
