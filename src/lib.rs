@@ -51,6 +51,7 @@
 extern crate log;
 
 use std::{borrow::Cow, ffi::CStr};
+use std::ffi::c_char;
 
 use ash::vk::{
     self, DebugUtilsMessageSeverityFlagsEXT, DeviceCreateInfo, DeviceQueueCreateInfo, QueueFlags,
@@ -159,7 +160,7 @@ impl DeviceConnecter {
             .map(|x| match x {
                 DeviceFeature::Swapchain => ash::extensions::khr::Swapchain::name().as_ptr(),
             })
-            .collect::<Vec<*const i8>>();
+            .collect::<Vec<*const c_char>>();
         let queue_infos = vec![DeviceQueueCreateInfo::builder()
             .queue_family_index(queue_family_index as u32)
             .queue_priorities(&[1.0])

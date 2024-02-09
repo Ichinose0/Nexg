@@ -1,3 +1,4 @@
+use std::ffi::c_char;
 use crate::{NxError, NxResult};
 use ash::extensions::ext::DebugUtils;
 use ash::vk::{
@@ -11,7 +12,7 @@ use crate::{vulkan_debug_callback, Device, DeviceConnecter, DeviceFeature};
 /// Represents an additional feature of the instance.
 pub struct InstanceFeature {
     #[doc(hidden)]
-    extensions: Vec<*const i8>,
+    extensions: Vec<*const c_char>,
     #[doc(hidden)]
     device_exts: Vec<DeviceFeature>,
 }
@@ -76,7 +77,7 @@ impl InstanceBuilder {
     /// Create an instance.
     /// This will fail if there is insufficient memory or if the device does not support **Vulkan 1.3** or **later**.
     pub fn build(mut self) -> NxResult<Instance> {
-        self.feature.extensions.push(DebugUtils::name().as_ptr());
+        self.feature.extensions.push(DebugUtils::name().as_ptr() as *const c_char);
         let entry = Entry::linked();
         let create_info = InstanceCreateInfo::builder()
             .enabled_extension_names(&self.feature.extensions)
