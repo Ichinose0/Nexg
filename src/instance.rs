@@ -4,6 +4,7 @@ use ash::vk::{
     self, DebugUtilsMessengerEXT, DeviceCreateInfo, PhysicalDevice, PhysicalDeviceMemoryProperties,
 };
 use ash::{vk::InstanceCreateInfo, Entry};
+use raw_window_handle::{RawDisplayHandle, RawWindowHandle};
 
 use crate::{vulkan_debug_callback, Device, DeviceConnecter, DeviceFeature};
 
