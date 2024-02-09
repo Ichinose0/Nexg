@@ -66,24 +66,15 @@ const HEIGHT: u32 = 480;
 fn main() {
     let feature = InstanceFeature::empty();
     let instance = InstanceBuilder::new().feature(feature).build().unwrap();
-    let connecters = instance.enumerate_connecters().unwrap();
-    let mut index = 0;
-    let mut found_device = false;
-    for i in &connecters {
-        let properties = i.get_queue_family_properties(&instance).unwrap();
-        for i in properties {
-            if i.is_graphic_support() {
-                index = 0;
-                found_device = true;
-                break;
-            }
-        }
-    }
-    if !found_device {
-        panic!("No suitable device found.")
-    }
-
-    let connecter = connecters[index];
+    
+    // Request suitable connecter.
+    let desc = RequestConnecterDescriptor::new()
+        .graphic_support(true)
+        .compute_support(true)
+        .transfer_support(true);
+    let connecters = instance.request_connecters(&[desc]).unwrap();
+    let connecter = connecters[0];
+    let index = connecter.get_queue_family_index();
 
     let device = connecter.create_device(&instance, index).unwrap();
 
