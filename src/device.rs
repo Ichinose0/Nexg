@@ -79,7 +79,7 @@ impl Device {
     where
         D: Destroy,
     {
-        object.device(&self);
+        object.device(self);
     }
 }
 

@@ -10,9 +10,9 @@ pub enum BufferUsage {
     Uniform,
 }
 
-impl Into<BufferUsageFlags> for BufferUsage {
-    fn into(self) -> BufferUsageFlags {
-        match self {
+impl From<BufferUsage> for BufferUsageFlags {
+    fn from(value: BufferUsage) -> Self {
+        match value {
             BufferUsage::Vertex => BufferUsageFlags::VERTEX_BUFFER,
             BufferUsage::Index => BufferUsageFlags::INDEX_BUFFER,
             BufferUsage::Uniform => BufferUsageFlags::UNIFORM_BUFFER,
@@ -124,13 +124,11 @@ impl Buffer {
 }
 
 impl Destroy for Buffer {
-    fn instance(&self, instance: &Instance) {
-
-    }
+    fn instance(&self, _: &Instance) {}
 
     fn device(&self, device: &Device) {
         unsafe {
-            device.device.destroy_buffer(self.buffer,None);
+            device.device.destroy_buffer(self.buffer, None);
             device.destroy(&self.memory);
         }
     }

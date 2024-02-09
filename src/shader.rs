@@ -100,9 +100,9 @@ pub enum ShaderStage {
     Fragment,
 }
 
-impl Into<ShaderStageFlags> for ShaderStage {
-    fn into(self) -> ShaderStageFlags {
-        match self {
+impl From<ShaderStage> for ShaderStageFlags {
+    fn from(value: ShaderStage) -> Self {
+        match value {
             ShaderStage::Vertex => ShaderStageFlags::VERTEX,
             ShaderStage::Fragment => ShaderStageFlags::FRAGMENT,
         }

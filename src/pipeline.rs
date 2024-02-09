@@ -3,8 +3,8 @@ use std::ffi::CString;
 use ash::vk::{
     ColorComponentFlags, CullModeFlags, DescriptorPool, DescriptorPoolCreateInfo,
     DescriptorPoolSize, DescriptorSet, DescriptorSetAllocateInfo, DescriptorSetLayoutCreateInfo,
-    Extent2D, Format, FrontFace, GraphicsPipelineCreateInfo, Offset2D, PipelineCache,
-    PipelineColorBlendAttachmentState, PipelineColorBlendStateCreateInfo,
+    DescriptorType, Extent2D, Format, FrontFace, GraphicsPipelineCreateInfo, Offset2D,
+    PipelineCache, PipelineColorBlendAttachmentState, PipelineColorBlendStateCreateInfo,
     PipelineInputAssemblyStateCreateInfo, PipelineLayoutCreateInfo,
     PipelineMultisampleStateCreateInfo, PipelineRasterizationStateCreateInfo,
     PipelineShaderStageCreateInfo, PipelineVertexInputStateCreateInfo,
@@ -31,10 +31,6 @@ impl Into<ash::vk::PipelineBindPoint> for BindPoint {
 }
 
 pub struct PipelineLayoutDescriptor<'a> {
-    width: u32,
-    height: u32,
-    min_depth: f32,
-    max_depth: f32,
     renderpass: Option<&'a RenderPass>,
     set_layout_descriptor: Option<&'a ResourceLayout>,
 }
@@ -43,10 +39,6 @@ impl<'a> PipelineLayoutDescriptor<'a> {
     #[inline]
     pub fn empty() -> Self {
         Self {
-            width: 100,
-            height: 100,
-            min_depth: 0.0,
-            max_depth: 1.0,
             renderpass: None,
             set_layout_descriptor: None,
         }
@@ -173,10 +165,10 @@ pub enum ResourceType {
     UniformBuffer,
 }
 
-impl Into<ash::vk::DescriptorType> for ResourceType {
-    fn into(self) -> ash::vk::DescriptorType {
-        match self {
-            ResourceType::UniformBuffer => ash::vk::DescriptorType::UNIFORM_BUFFER,
+impl From<ResourceType> for DescriptorType {
+    fn from(value: ResourceType) -> Self {
+        match value {
+            ResourceType::UniformBuffer => DescriptorType::UNIFORM_BUFFER,
         }
     }
 }
@@ -327,7 +319,8 @@ impl Destroy for Resource {
         unsafe {
             device
                 .device
-                .free_descriptor_sets(self.pool, &[self.descriptor_set]);
+                .free_descriptor_sets(self.pool, &[self.descriptor_set])
+                .unwrap();
         }
     }
 }

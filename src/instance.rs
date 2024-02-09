@@ -1,11 +1,10 @@
-use std::ffi::c_char;
 use crate::{NxError, NxResult};
 use ash::extensions::ext::DebugUtils;
 use ash::vk::{
     self, DebugUtilsMessengerEXT, DeviceCreateInfo, PhysicalDevice, PhysicalDeviceMemoryProperties,
 };
 use ash::{vk::InstanceCreateInfo, Entry};
-use raw_window_handle::{RawDisplayHandle, RawWindowHandle};
+use std::ffi::c_char;
 
 use crate::{vulkan_debug_callback, Device, DeviceConnecter, DeviceFeature};
 
@@ -77,7 +76,9 @@ impl InstanceBuilder {
     /// Create an instance.
     /// This will fail if there is insufficient memory or if the device does not support **Vulkan 1.3** or **later**.
     pub fn build(mut self) -> NxResult<Instance> {
-        self.feature.extensions.push(DebugUtils::name().as_ptr() as *const c_char);
+        self.feature
+            .extensions
+            .push(DebugUtils::name().as_ptr() as *const c_char);
         let entry = Entry::linked();
         let create_info = InstanceCreateInfo::builder()
             .enabled_extension_names(&self.feature.extensions)
@@ -113,6 +114,12 @@ impl InstanceBuilder {
     }
 }
 
+impl Default for InstanceBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub struct RequestConnecterDescriptor {
     is_graphic_support: bool,
     is_compute_support: bool,
@@ -143,6 +150,12 @@ impl RequestConnecterDescriptor {
             is_compute_support: true,
             is_transfer_support: true,
         }
+    }
+}
+
+impl Default for RequestConnecterDescriptor {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -213,7 +226,7 @@ impl Instance {
             let mut index = 0;
             let mut count = 0;
             for i in &connecters {
-                let properties = i.get_queue_family_properties(&self).unwrap();
+                let properties = i.get_queue_family_properties(self).unwrap();
                 for (n, i) in properties.iter().enumerate() {
                     count = 0;
                     if i.is_graphic_support() == desc.is_graphic_support {

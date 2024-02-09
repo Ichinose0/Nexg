@@ -211,12 +211,12 @@ impl Image {
         match self.memory.as_ref() {
             None => Err(NxError::Unknown),
             Some(x) => {
-                let data = x.map(&device, self.size.unwrap())?;
+                let data = x.map(device, self.size.unwrap())?;
                 let slice: &[u8] = unsafe {
                     std::slice::from_raw_parts(data as *const u8, (width * height * 4) as usize)
                 };
                 let data = slice.to_vec();
-                x.unmap(&device);
+                x.unmap(device);
                 Ok(data)
             }
         }
@@ -228,7 +228,7 @@ impl Image {
         device: &Device,
         descriptor: &ImageViewDescriptor,
     ) -> ImageView {
-        ImageView::new(device, &self, &descriptor)
+        ImageView::new(device, self, &descriptor)
     }
 
     #[doc(hidden)]

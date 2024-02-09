@@ -50,8 +50,8 @@
 #[macro_use]
 extern crate log;
 
-use std::{borrow::Cow, ffi::CStr};
 use std::ffi::c_char;
+use std::{borrow::Cow, ffi::CStr};
 
 use ash::vk::{
     self, DebugUtilsMessageSeverityFlagsEXT, DeviceCreateInfo, DeviceQueueCreateInfo, QueueFlags,
@@ -287,12 +287,12 @@ impl Extent3d {
     }
 }
 
-impl Into<vk::Extent3D> for Extent3d {
-    fn into(self) -> vk::Extent3D {
+impl From<Extent3d> for vk::Extent3D {
+    fn from(value: Extent3d) -> Self {
         vk::Extent3D {
-            width: self.width,
-            height: self.height,
-            depth: self.depth,
+            width: value.width,
+            height: value.height,
+            depth: value.depth,
         }
     }
 }

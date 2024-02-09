@@ -1,13 +1,24 @@
-use nexg::{Buffer, BufferDescriptor, BufferUsage, CommandPoolDescriptor, CommandRecorderDescriptor, DataFormat, Fence, FenceDescriptor, FrameBuffer, FrameBufferDescriptor, ImageViewDescriptor, InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueuePresentDescriptor, QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor, RequestConnecterDescriptor, Resource, ResourceBufferDescriptor, ResourceLayout, ResourceLayoutBinding, ResourcePool, ResourcePoolDescriptor, ResourcePoolSize, ResourceType, ResourceUpdateDescriptor, Semaphore, SemaphoreDescriptor, Shader, ShaderStage, ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, Surface, Swapchain, VertexInputAttributeDescriptor, VertexInputBindingDescriptor};
+use nexg::{
+    Buffer, BufferDescriptor, BufferUsage, CommandPoolDescriptor, CommandRecorderDescriptor,
+    DataFormat, Fence, FenceDescriptor, FrameBuffer, FrameBufferDescriptor, ImageViewDescriptor,
+    InstanceBuilder, InstanceFeature, LoadOp, Pipeline, PipelineDescriptor, PipelineLayout,
+    PipelineLayoutDescriptor, PipelineVertexInputDescriptor, QueuePresentDescriptor,
+    QueueSubmitDescriptor, RenderPass, RenderPassBeginDescriptor, RenderPassDescriptor,
+    RequestConnecterDescriptor, Resource, ResourceBufferDescriptor, ResourceLayout,
+    ResourceLayoutBinding, ResourcePool, ResourcePoolDescriptor, ResourcePoolSize, ResourceType,
+    ResourceUpdateDescriptor, Semaphore, SemaphoreDescriptor, Shader, ShaderStage,
+    ShaderStageDescriptor, Spirv, StoreOp, SubPass, SubPassDescriptor, Surface, Swapchain,
+    VertexInputAttributeDescriptor, VertexInputBindingDescriptor,
+};
 use simple_logger::SimpleLogger;
 use std::ffi::c_void;
 use std::mem::offset_of;
+use winit::event::StartCause;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::EventLoop,
     window::WindowBuilder,
 };
-use winit::event::StartCause;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -101,7 +112,6 @@ fn main() {
     let vertex = Shader::new(&device, &Spirv::from_raw(VERTEX_S).unwrap());
 
     let fragment = Shader::new(&device, &Spirv::from_raw(FRAGMENT_S).unwrap());
-
 
     let desc = BufferDescriptor::empty().size(std::mem::size_of::<Vertex>() * VERTEX.len());
     let vertex_buffer = Buffer::new(&instance, connecter, &device, &desc).unwrap();
@@ -224,22 +234,25 @@ fn main() {
                     .acquire_next_image(Some(&swapchain_image_semaphore))
                     .unwrap();
 
-                scene_data.rect_center = Vec4((0.3 * f64::cos(time)) as f32, (0.3 * f64::sin(time)) as f32, 0.0, 0.0);
+                scene_data.rect_center = Vec4(
+                    (0.3 * f64::cos(time)) as f32,
+                    (0.3 * f64::sin(time)) as f32,
+                    0.0,
+                    0.0,
+                );
                 time += 0.001;
 
-                uniform_buffer.write(&device,&scene_data as *const SceneData as *const c_void).unwrap();
-
+                uniform_buffer
+                    .write(&device, &scene_data as *const SceneData as *const c_void)
+                    .unwrap();
 
                 image_rendered_fence.wait(&device, u64::MAX);
                 image_rendered_fence.reset(&device);
 
-
-
-
                 let begin_desc = RenderPassBeginDescriptor::empty()
                     .width(size.width)
                     .height(size.height)
-                    .clear(0.0,0.0,0.0, 1.0)
+                    .clear(0.0, 0.0, 0.0, 1.0)
                     .render_pass(&render_pass)
                     .frame_buffer(&frame_buffers[img]);
                 recorders[0].reset(&device);

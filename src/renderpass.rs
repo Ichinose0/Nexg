@@ -80,9 +80,9 @@ pub enum LoadOp {
     DontCare,
 }
 
-impl Into<AttachmentLoadOp> for LoadOp {
-    fn into(self) -> AttachmentLoadOp {
-        match self {
+impl From<LoadOp> for AttachmentLoadOp {
+    fn from(value: LoadOp) -> Self {
+        match value {
             LoadOp::Load => AttachmentLoadOp::LOAD,
             LoadOp::Clear => AttachmentLoadOp::CLEAR,
             LoadOp::DontCare => AttachmentLoadOp::DONT_CARE,
@@ -96,9 +96,9 @@ pub enum StoreOp {
     DontCare,
 }
 
-impl Into<AttachmentStoreOp> for StoreOp {
-    fn into(self) -> AttachmentStoreOp {
-        match self {
+impl From<StoreOp> for AttachmentStoreOp {
+    fn from(value: StoreOp) -> Self {
+        match value {
             StoreOp::Store => AttachmentStoreOp::STORE,
             StoreOp::DontCare => AttachmentStoreOp::DONT_CARE,
         }

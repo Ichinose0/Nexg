@@ -142,7 +142,12 @@ impl CommandRecorder {
                             .height(descriptor.height)
                             .build(),
                     )
-                    .offset(Offset2D::builder().x(0).y(0).build())
+                    .offset(
+                        Offset2D::builder()
+                            .x(descriptor.x as i32)
+                            .y(descriptor.y as i32)
+                            .build(),
+                    )
                     .build(),
             )
             .clear_values(&[clear])
