@@ -8,7 +8,7 @@ use ash::vk::{
     PipelineInputAssemblyStateCreateInfo, PipelineLayoutCreateInfo,
     PipelineMultisampleStateCreateInfo, PipelineRasterizationStateCreateInfo,
     PipelineShaderStageCreateInfo, PipelineVertexInputStateCreateInfo,
-    PipelineViewportStateCreateInfo, PolygonMode, PrimitiveTopology, Rect2D, SampleCountFlags,
+    PipelineViewportStateCreateInfo, PolygonMode, Rect2D, SampleCountFlags,
     VertexInputAttributeDescription, VertexInputBindingDescription, VertexInputRate, Viewport,
 };
 
@@ -16,6 +16,25 @@ use crate::{
     Buffer, Destroy, Device, Instance, NxError, NxResult, RenderPass, ShaderStage,
     ShaderStageDescriptor,
 };
+
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub enum PrimitiveTopology {
+    TriangleList,
+    TriangleFan,
+    TriangleStrip,
+    LineStrip
+}
+
+impl From<crate::PrimitiveTopology> for ash::vk::PrimitiveTopology {
+    fn from(value: crate::PrimitiveTopology) -> Self {
+        match value {
+            crate::PrimitiveTopology::TriangleList => ash::vk::PrimitiveTopology::TRIANGLE_LIST,
+            crate::PrimitiveTopology::TriangleFan => ash::vk::PrimitiveTopology::TRIANGLE_FAN,
+            crate::PrimitiveTopology::TriangleStrip => ash::vk::PrimitiveTopology::TRIANGLE_STRIP,
+            crate::PrimitiveTopology::LineStrip => ash::vk::PrimitiveTopology::LINE_STRIP,
+        }
+    }
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BindPoint {
@@ -411,6 +430,7 @@ pub struct PipelineDescriptor<'a> {
     height: u32,
     max_depth: f32,
     min_depth: f32,
+    topology: PrimitiveTopology,
     shader_stages: &'a [ShaderStageDescriptor<'a>],
     input_descriptor: Option<&'a PipelineVertexInputDescriptor<'a>>,
 }
@@ -422,9 +442,16 @@ impl<'a> PipelineDescriptor<'a> {
             height: 100,
             max_depth: 1.0,
             min_depth: 0.0,
+            topology: PrimitiveTopology::TriangleList,
             shader_stages: &[],
             input_descriptor: None,
         }
+    }
+
+    #[inline]
+    pub const fn topology(mut self,topology: PrimitiveTopology) -> Self {
+        self.topology = topology;
+        self
     }
 
     #[inline]
@@ -543,7 +570,7 @@ impl Pipeline {
             .vertex_binding_descriptions(&[])
             .build();
         let input_assembly = PipelineInputAssemblyStateCreateInfo::builder()
-            .topology(PrimitiveTopology::TRIANGLE_LIST)
+            .topology(descriptor.topology.into())
             .primitive_restart_enable(false)
             .build();
         let rasterizer = PipelineRasterizationStateCreateInfo::builder()
