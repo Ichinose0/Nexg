@@ -169,7 +169,7 @@ fn main() {
     let desc = QueueSubmitDescriptor::empty();
     queue.submit(&device, &desc, &recorders);
 
-    let file = File::create("index_buffer.png").unwrap();
+    let file = File::create("../media/img/index_buffer.png").unwrap();
     let w = &mut BufWriter::new(file);
 
     let mut encoder = png::Encoder::new(w, WIDTH, HEIGHT); // Width is 2 pixels and height is 1.
